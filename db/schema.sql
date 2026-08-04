@@ -22,6 +22,12 @@ CREATE TABLE IF NOT EXISTS campaigns (
 
 CREATE INDEX IF NOT EXISTS idx_campaigns_brand_id ON campaigns (brand_id);
 
+-- Public shareable URL slug (e.g. /c/summer-sale-9). Nullable so it
+-- can be backfilled on existing rows; partial index keeps it unique
+-- once set.
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS slug TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_campaigns_slug ON campaigns (slug) WHERE slug IS NOT NULL;
+
 -- Keep updated_at current on every campaign update
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$

@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const pool = require('./lib/db');
 const handlers = require('./lib/handlers');
+const { renderCampaignPage, renderNotFoundPage } = require('./lib/campaign-page');
 
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL environment variable is required.');
@@ -65,6 +66,19 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(indexHtml);
+      return;
+    }
+
+    const slugMatch = req.method === 'GET' && url.pathname.match(/^\/c\/([^/]+)$/);
+    if (slugMatch) {
+      try {
+        const { body: campaign } = await handlers.getCampaignBySlug(pool, decodeURIComponent(slugMatch[1]));
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(renderCampaignPage(campaign));
+      } catch (error) {
+        res.writeHead(error.statusCode || 500, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(renderNotFoundPage());
+      }
       return;
     }
 
