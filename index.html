@@ -1,26 +1,401 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      color: #222;
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ניהול קמפיינים</title>
+<style>
+  :root {
+    --bg: #f4f4f6;
+    --card: #ffffff;
+    --border: #e0e0e6;
+    --text: #1f2126;
+    --muted: #6b6f7a;
+    --accent: #3355ee;
+    --accent-text: #ffffff;
+    --danger: #d64545;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16171c;
+      --card: #202228;
+      --border: #34363f;
+      --text: #ecedf0;
+      --muted: #9296a3;
+      --accent: #5b7cfa;
+      --accent-text: #0b0c10;
     }
-    h1 {
-      font-size: 3rem;
-    }
-  </style>
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+  }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  p.subtitle { color: var(--muted); margin: 0 0 24px; }
+  main { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  section.card h2 { margin: 0 0 14px; font-size: 1.1rem; }
+  form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 16px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 0.78rem; color: var(--muted); }
+  input, select, textarea {
+    font: inherit;
+    padding: 7px 9px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    min-width: 0;
+  }
+  button {
+    font: inherit;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    background: var(--accent);
+    color: var(--accent-text);
+    cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button.ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 10px;
+    font-size: 0.85rem;
+  }
+  button.danger { background: var(--danger); color: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+  th, td { text-align: right; padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
+  tbody tr:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+  .empty { color: var(--muted); font-style: italic; padding: 10px 0; }
+  .badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #fff;
+  }
+  .badge-draft { background: #8a8f99; }
+  .badge-active { background: #2e9e5b; }
+  .badge-paused { background: #d99a26; }
+  .badge-completed { background: #3355ee; }
+  .badge-cancelled { background: #d64545; }
+  .status-select { font-size: 0.82rem; }
+  .row-actions { display: flex; gap: 6px; }
+  .msg { font-size: 0.85rem; margin: 0 0 10px; min-height: 1.1em; }
+  .msg.error { color: var(--danger); }
+  .table-wrap { overflow-x: auto; }
+  .list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border); border-radius: 999px;
+    padding: 5px 6px 5px 12px; font-size: 0.85rem;
+  }
+  .chip button { padding: 2px 8px; font-size: 0.75rem; }
+  .field-wide { flex: 1 1 200px; }
+  .filter-field { margin-bottom: 12px; max-width: 240px; }
+</style>
 </head>
 <body>
-  <h1>Hello World</h1>
+<main>
+  <div>
+    <h1>ניהול קמפיינים למותגים</h1>
+    <p class="subtitle">מחובר ל-Neon PostgreSQL · <span id="dbStatus">בודק חיבור…</span></p>
+  </div>
+
+  <section class="card">
+    <h2>מותגים</h2>
+    <p class="msg" id="brandMsg"></p>
+    <form id="brandForm">
+      <div class="field">
+        <label for="brandName">שם מותג</label>
+        <input id="brandName" name="name" required placeholder="לדוגמה: Nike" />
+      </div>
+      <button type="submit">הוסף מותג</button>
+    </form>
+    <div class="list" id="brandList"><p class="empty">טוען…</p></div>
+  </section>
+
+  <section class="card">
+    <h2>קמפיינים</h2>
+    <p class="msg" id="campaignMsg"></p>
+    <form id="campaignForm">
+      <div class="field">
+        <label for="campaignBrand">מותג</label>
+        <select id="campaignBrand" name="brand_id" required></select>
+      </div>
+      <div class="field">
+        <label for="campaignName">שם קמפיין</label>
+        <input id="campaignName" name="name" required placeholder="לדוגמה: מבצע קיץ" />
+      </div>
+      <div class="field">
+        <label for="campaignBudget">תקציב</label>
+        <input id="campaignBudget" name="budget" type="number" step="0.01" min="0" placeholder="0" />
+      </div>
+      <div class="field">
+        <label for="campaignStart">תאריך התחלה</label>
+        <input id="campaignStart" name="start_date" type="date" />
+      </div>
+      <div class="field">
+        <label for="campaignEnd">תאריך סיום</label>
+        <input id="campaignEnd" name="end_date" type="date" />
+      </div>
+      <div class="field field-wide">
+        <label for="campaignDescription">תיאור</label>
+        <input id="campaignDescription" name="description" placeholder="אופציונלי" />
+      </div>
+      <button type="submit">הוסף קמפיין</button>
+    </form>
+
+    <div class="field filter-field">
+      <label for="filterBrand">סינון לפי מותג</label>
+      <select id="filterBrand">
+        <option value="">כל המותגים</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>מותג</th>
+            <th>שם</th>
+            <th>תיאור</th>
+            <th>תקציב</th>
+            <th>התחלה</th>
+            <th>סיום</th>
+            <th>סטטוס</th>
+            <th>פעולות</th>
+          </tr>
+        </thead>
+        <tbody id="campaignRows">
+          <tr><td colspan="8" class="empty">טוען…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+  const STATUSES = ['draft', 'active', 'paused', 'completed', 'cancelled'];
+  const STATUS_LABELS = {
+    draft: 'טיוטה',
+    active: 'פעיל',
+    paused: 'מושהה',
+    completed: 'הושלם',
+    cancelled: 'בוטל',
+  };
+
+  let brandsCache = [];
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
+  function showMsg(id, text, isError) {
+    const node = document.getElementById(id);
+    node.textContent = text || '';
+    node.className = 'msg' + (isError ? ' error' : '');
+  }
+
+  async function api(path, options) {
+    const res = await fetch(path, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', ...(options && options.headers) },
+    });
+    let data = null;
+    if (res.status !== 204) {
+      data = await res.json().catch(() => null);
+    }
+    if (!res.ok) {
+      throw new Error((data && data.error) || `שגיאה (${res.status})`);
+    }
+    return data;
+  }
+
+  async function checkStatus() {
+    const el = document.getElementById('dbStatus');
+    try {
+      await api('/api/status');
+      el.textContent = 'מחובר ✅';
+    } catch (error) {
+      el.textContent = 'לא מחובר ❌ (' + error.message + ')';
+    }
+  }
+
+  async function loadBrands() {
+    const listEl = document.getElementById('brandList');
+    try {
+      brandsCache = await api('/api/brands');
+    } catch (error) {
+      listEl.innerHTML = '';
+      showMsg('brandMsg', error.message, true);
+      return;
+    }
+
+    listEl.innerHTML = brandsCache.length
+      ? brandsCache.map((b) => `
+        <span class="chip">
+          ${escapeHtml(b.name)}
+          <button class="ghost danger" data-delete-brand="${b.id}">מחק</button>
+        </span>
+      `).join('')
+      : '<p class="empty">אין עדיין מותגים.</p>';
+
+    const brandSelect = document.getElementById('campaignBrand');
+    const filterSelect = document.getElementById('filterBrand');
+    const prevFilter = filterSelect.value;
+
+    brandSelect.innerHTML = brandsCache
+      .map((b) => `<option value="${b.id}">${escapeHtml(b.name)}</option>`)
+      .join('') || '<option value="">אין מותגים</option>';
+
+    filterSelect.innerHTML = '<option value="">כל המותגים</option>' +
+      brandsCache.map((b) => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+    filterSelect.value = prevFilter;
+  }
+
+  function formatDate(value) {
+    return value || '-';
+  }
+
+  function formatBudget(value) {
+    if (value === null || value === undefined) return '-';
+    return Number(value).toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  async function loadCampaigns() {
+    const rowsEl = document.getElementById('campaignRows');
+    const brandId = document.getElementById('filterBrand').value;
+    const query = brandId ? `?brand_id=${encodeURIComponent(brandId)}` : '';
+
+    let campaigns;
+    try {
+      campaigns = await api('/api/campaigns' + query);
+    } catch (error) {
+      rowsEl.innerHTML = `<tr><td colspan="8" class="empty">${escapeHtml(error.message)}</td></tr>`;
+      return;
+    }
+
+    if (campaigns.length === 0) {
+      rowsEl.innerHTML = '<tr><td colspan="8" class="empty">אין עדיין קמפיינים.</td></tr>';
+      return;
+    }
+
+    rowsEl.innerHTML = campaigns.map((c) => `
+      <tr>
+        <td>${escapeHtml(c.brand_name)}</td>
+        <td>${escapeHtml(c.name)}</td>
+        <td>${escapeHtml(c.description) || '-'}</td>
+        <td>${formatBudget(c.budget)}</td>
+        <td>${formatDate(c.start_date)}</td>
+        <td>${formatDate(c.end_date)}</td>
+        <td>
+          <select class="status-select" data-status-for="${c.id}">
+            ${STATUSES.map((s) => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('')}
+          </select>
+        </td>
+        <td class="row-actions">
+          <button class="ghost danger" data-delete-campaign="${c.id}">מחק</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('brandForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('brandName').value.trim();
+    if (!name) return;
+    try {
+      await api('/api/brands', { method: 'POST', body: JSON.stringify({ name }) });
+      document.getElementById('brandName').value = '';
+      showMsg('brandMsg', '');
+      await loadBrands();
+    } catch (error) {
+      showMsg('brandMsg', error.message, true);
+    }
+  });
+
+  document.getElementById('brandList').addEventListener('click', async (e) => {
+    const id = e.target.getAttribute('data-delete-brand');
+    if (!id) return;
+    if (!confirm('למחוק את המותג? כל הקמפיינים שלו יימחקו גם הם.')) return;
+    try {
+      await api(`/api/brands/${id}`, { method: 'DELETE' });
+      await Promise.all([loadBrands(), loadCampaigns()]);
+    } catch (error) {
+      showMsg('brandMsg', error.message, true);
+    }
+  });
+
+  document.getElementById('campaignForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const payload = {
+      brand_id: Number(form.brand_id.value),
+      name: form.name.value.trim(),
+      description: form.description.value.trim() || null,
+      budget: form.budget.value ? Number(form.budget.value) : null,
+      start_date: form.start_date.value || null,
+      end_date: form.end_date.value || null,
+    };
+    if (!payload.brand_id || !payload.name) {
+      showMsg('campaignMsg', 'יש לבחור מותג ולמלא שם קמפיין', true);
+      return;
+    }
+    try {
+      await api('/api/campaigns', { method: 'POST', body: JSON.stringify(payload) });
+      form.reset();
+      showMsg('campaignMsg', '');
+      await loadCampaigns();
+    } catch (error) {
+      showMsg('campaignMsg', error.message, true);
+    }
+  });
+
+  document.getElementById('campaignRows').addEventListener('change', async (e) => {
+    const id = e.target.getAttribute('data-status-for');
+    if (!id) return;
+    try {
+      await api(`/api/campaigns/${id}`, { method: 'PUT', body: JSON.stringify({ status: e.target.value }) });
+      showMsg('campaignMsg', '');
+    } catch (error) {
+      showMsg('campaignMsg', error.message, true);
+      await loadCampaigns();
+    }
+  });
+
+  document.getElementById('campaignRows').addEventListener('click', async (e) => {
+    const id = e.target.getAttribute('data-delete-campaign');
+    if (!id) return;
+    if (!confirm('למחוק את הקמפיין?')) return;
+    try {
+      await api(`/api/campaigns/${id}`, { method: 'DELETE' });
+      await loadCampaigns();
+    } catch (error) {
+      showMsg('campaignMsg', error.message, true);
+    }
+  });
+
+  document.getElementById('filterBrand').addEventListener('change', loadCampaigns);
+
+  checkStatus();
+  loadBrands().then(loadCampaigns);
+</script>
 </body>
 </html>
