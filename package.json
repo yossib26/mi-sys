@@ -6,7 +6,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node --env-file=.env server.js",
-    "migrate": "node --env-file=.env db/migrate.js"
+    "migrate": "node --env-file=.env db/migrate.js",
+    "seed": "node --env-file=.env db/seed.js"
   },
   "dependencies": {
     "pg": "^8.12.0"
