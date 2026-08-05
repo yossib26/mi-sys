@@ -6,122 +6,149 @@
 <title>ניהול קמפיינים</title>
 <style>
   :root {
-    --bg: #f4f4f6;
+    --bg: #f8f9fb;
     --card: #ffffff;
-    --border: #e0e0e6;
-    --text: #1f2126;
-    --muted: #6b6f7a;
-    --accent: #3355ee;
+    --border: #edeef2;
+    --border-strong: #e2e4ea;
+    --text: #24262d;
+    --muted: #8a8f9c;
+    --accent: #4361ee;
+    --accent-soft: #eef1fe;
     --accent-text: #ffffff;
-    --danger: #d64545;
-    --radius: 10px;
+    --danger: #e0455a;
+    --danger-soft: #fdeced;
+    --radius: 16px;
+    --shadow: 0 1px 2px rgba(20, 24, 40, 0.04), 0 2px 8px rgba(20, 24, 40, 0.04);
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #16171c;
-      --card: #202228;
-      --border: #34363f;
-      --text: #ecedf0;
+      --card: #1e2026;
+      --border: #2a2c34;
+      --border-strong: #34363f;
+      --text: #edeef1;
       --muted: #9296a3;
-      --accent: #5b7cfa;
+      --accent: #6d87f7;
+      --accent-soft: #232a45;
       --accent-text: #0b0c10;
+      --danger: #ea6273;
+      --danger-soft: #3a2228;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 14px rgba(0, 0, 0, 0.22);
     }
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
-    padding: 24px;
+    padding: 36px 24px;
+    -webkit-font-smoothing: antialiased;
   }
-  h1 { font-size: 1.6rem; margin: 0 0 4px; }
-  p.subtitle { color: var(--muted); margin: 0 0 24px; }
-  main { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  h1 { font-size: 1.55rem; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+  p.subtitle { color: var(--muted); margin: 0 0 28px; font-size: 0.92rem; }
+  main { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
   section.card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    padding: 24px 26px;
   }
-  section.card h2 { margin: 0 0 14px; font-size: 1.1rem; }
-  form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 16px; }
-  .field { display: flex; flex-direction: column; gap: 4px; }
-  .field label { font-size: 0.78rem; color: var(--muted); }
+  section.card h2 { margin: 0 0 18px; font-size: 1.05rem; font-weight: 600; }
+  form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 18px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
   input, select, textarea {
     font: inherit;
-    padding: 7px 9px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    padding: 9px 11px;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
     background: var(--bg);
     color: var(--text);
     min-width: 0;
+    transition: border-color 0.15s ease;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
   }
   button {
     font: inherit;
-    padding: 8px 16px;
+    font-weight: 600;
+    padding: 9px 18px;
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     background: var(--accent);
     color: var(--accent-text);
     cursor: pointer;
+    transition: filter 0.15s ease, background 0.15s ease;
   }
-  button:hover { filter: brightness(1.08); }
+  button:hover { filter: brightness(1.06); }
   button.ghost {
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-strong);
     color: var(--text);
-    padding: 5px 10px;
+    font-weight: 500;
+    padding: 6px 12px;
     font-size: 0.85rem;
   }
-  button.danger { background: var(--danger); color: #fff; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
-  th, td { text-align: right; padding: 8px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-  th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
+  button.ghost:hover { background: var(--bg); filter: none; }
+  button.danger { background: var(--danger-soft); color: var(--danger); }
+  button.danger:hover { filter: none; background: var(--danger); color: #fff; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: right; padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th {
+    color: var(--muted); font-weight: 600; font-size: 0.72rem;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
   th[data-sort] { cursor: pointer; -webkit-user-select: none; user-select: none; white-space: nowrap; }
   th[data-sort]:hover { color: var(--text); }
-  th[data-sort] .arrow { display: inline-block; width: 1em; opacity: 0.6; }
-  .pagination { display: flex; align-items: center; gap: 10px; justify-content: center; margin-top: 14px; font-size: 0.85rem; color: var(--muted); }
+  th[data-sort] .arrow { display: inline-block; width: 1em; opacity: 0.7; }
+  .pagination { display: flex; align-items: center; gap: 12px; justify-content: center; margin-top: 18px; font-size: 0.85rem; color: var(--muted); }
   .pagination button {
-    padding: 5px 12px; font-size: 0.85rem; background: transparent;
-    border: 1px solid var(--border); color: var(--text);
+    padding: 6px 14px; font-size: 0.85rem; font-weight: 500; background: transparent;
+    border: 1px solid var(--border-strong); color: var(--text);
   }
-  .pagination button:disabled { opacity: 0.4; cursor: default; }
-  tbody tr:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
-  .empty { color: var(--muted); font-style: italic; padding: 10px 0; }
+  .pagination button:hover { background: var(--bg); }
+  .pagination button:disabled { opacity: 0.4; cursor: default; background: none; }
+  tbody tr { transition: background 0.1s ease; }
+  tbody tr:hover { background: var(--accent-soft); }
+  .empty { color: var(--muted); font-style: italic; padding: 14px 0; }
   .badge {
     display: inline-block;
-    padding: 2px 9px;
+    padding: 3px 11px;
     border-radius: 999px;
-    font-size: 0.78rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: #fff;
   }
-  .badge-draft { background: #8a8f99; }
-  .badge-active { background: #2e9e5b; }
-  .badge-paused { background: #d99a26; }
-  .badge-completed { background: #3355ee; }
-  .badge-cancelled { background: #d64545; }
+  .badge-draft { background: #9a9fac; }
+  .badge-active { background: #2fa968; }
+  .badge-paused { background: #e0a020; }
+  .badge-completed { background: #4361ee; }
+  .badge-cancelled { background: #e0455a; }
   .status-select { font-size: 0.82rem; }
   .row-actions { display: flex; gap: 6px; align-items: center; }
   .row-actions a {
-    display: inline-block; padding: 5px 10px; font-size: 0.85rem;
-    border: 1px solid var(--border); border-radius: 6px;
-    color: var(--text); text-decoration: none;
+    display: inline-block; padding: 6px 12px; font-size: 0.85rem; font-weight: 500;
+    border: 1px solid var(--border-strong); border-radius: 10px;
+    color: var(--text); text-decoration: none; transition: background 0.15s ease;
   }
-  .row-actions a:hover { filter: brightness(1.08); }
+  .row-actions a:hover { background: var(--bg); }
   .msg { font-size: 0.85rem; margin: 0 0 10px; min-height: 1.1em; }
   .msg.error { color: var(--danger); }
   .table-wrap { overflow-x: auto; }
   .list { display: flex; flex-wrap: wrap; gap: 8px; }
   .chip {
     display: flex; align-items: center; gap: 8px;
-    border: 1px solid var(--border); border-radius: 999px;
-    padding: 5px 6px 5px 12px; font-size: 0.85rem;
+    border: 1px solid var(--border-strong); border-radius: 999px;
+    background: var(--bg);
+    padding: 6px 6px 6px 14px; font-size: 0.85rem;
   }
-  .chip button { padding: 2px 8px; font-size: 0.75rem; }
+  .chip button { padding: 3px 10px; font-size: 0.75rem; }
   .field-wide { flex: 1 1 200px; }
-  .filter-field { margin-bottom: 12px; max-width: 240px; }
+  .filter-field { margin-bottom: 14px; max-width: 240px; }
 </style>
 </head>
 <body>

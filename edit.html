@@ -6,98 +6,117 @@
 <title>עריכת קמפיין</title>
 <style>
   :root {
-    --bg: #f4f4f6;
+    --bg: #f8f9fb;
     --card: #ffffff;
-    --border: #e0e0e6;
-    --text: #1f2126;
-    --muted: #6b6f7a;
-    --accent: #3355ee;
+    --border: #edeef2;
+    --border-strong: #e2e4ea;
+    --text: #24262d;
+    --muted: #8a8f9c;
+    --accent: #4361ee;
     --accent-text: #ffffff;
-    --danger: #d64545;
-    --radius: 10px;
+    --danger: #e0455a;
+    --danger-soft: #fdeced;
+    --radius: 16px;
+    --shadow: 0 1px 2px rgba(20, 24, 40, 0.04), 0 2px 8px rgba(20, 24, 40, 0.04);
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #16171c;
-      --card: #202228;
-      --border: #34363f;
-      --text: #ecedf0;
+      --card: #1e2026;
+      --border: #2a2c34;
+      --border-strong: #34363f;
+      --text: #edeef1;
       --muted: #9296a3;
-      --accent: #5b7cfa;
+      --accent: #6d87f7;
       --accent-text: #0b0c10;
+      --danger: #ea6273;
+      --danger-soft: #3a2228;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 14px rgba(0, 0, 0, 0.22);
     }
   }
   * { box-sizing: border-box; }
   body {
     margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
-    padding: 24px;
+    padding: 36px 24px;
+    -webkit-font-smoothing: antialiased;
   }
   a { color: var(--accent); }
-  h1 { font-size: 1.5rem; margin: 0 0 4px; }
-  p.subtitle { color: var(--muted); margin: 0 0 20px; }
-  main { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+  p.subtitle { color: var(--muted); margin: 0 0 24px; font-size: 0.92rem; }
+  main { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
   section.card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 20px 22px;
+    box-shadow: var(--shadow);
+    padding: 24px 26px;
   }
-  section.card h2 { margin: 0 0 16px; font-size: 1.05rem; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .field { display: flex; flex-direction: column; gap: 4px; }
+  section.card h2 { margin: 0 0 18px; font-size: 1.05rem; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
   .field.wide { grid-column: 1 / -1; }
-  .field label { font-size: 0.8rem; color: var(--muted); }
+  .field label { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
   input, select, textarea {
     font: inherit;
-    padding: 8px 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+    padding: 9px 11px;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
     background: var(--bg);
     color: var(--text);
     min-width: 0;
+    transition: border-color 0.15s ease;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
   }
   textarea { resize: vertical; min-height: 70px; }
   button {
     font: inherit;
+    font-weight: 600;
     padding: 9px 18px;
     border: none;
-    border-radius: 6px;
+    border-radius: 10px;
     background: var(--accent);
     color: var(--accent-text);
     cursor: pointer;
+    transition: filter 0.15s ease;
   }
-  button:hover { filter: brightness(1.08); }
+  button:hover { filter: brightness(1.06); }
   button.ghost {
     background: transparent;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-strong);
     color: var(--text);
+    font-weight: 500;
     padding: 6px 12px;
     font-size: 0.85rem;
   }
-  button.danger { background: var(--danger); color: #fff; }
+  button.ghost:hover { background: var(--bg); filter: none; }
+  button.danger { background: var(--danger-soft); color: var(--danger); }
+  button.danger:hover { filter: none; background: var(--danger); color: #fff; }
   .msg { font-size: 0.85rem; margin: 10px 0 0; min-height: 1.1em; }
   .msg.error { color: var(--danger); }
-  .msg.success { color: #2e9e5b; }
+  .msg.success { color: #2fa968; }
   .file-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .banner-preview { max-width: 100%; max-height: 160px; border-radius: 8px; border: 1px solid var(--border); display: block; }
+  .banner-preview { max-width: 100%; max-height: 160px; border-radius: 10px; border: 1px solid var(--border); display: block; }
   .file-info { font-size: 0.85rem; color: var(--muted); }
   .upload-label {
-    display: inline-block; padding: 7px 14px; font-size: 0.85rem;
-    border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
-    background: transparent; color: var(--text);
+    display: inline-block; padding: 7px 14px; font-size: 0.85rem; font-weight: 500;
+    border: 1px solid var(--border-strong); border-radius: 10px; cursor: pointer;
+    background: transparent; color: var(--text); transition: background 0.15s ease;
   }
-  .upload-label:hover { filter: brightness(1.08); }
+  .upload-label:hover { background: var(--bg); }
   .actions { display: flex; gap: 10px; justify-content: flex-start; }
   .back-link { display: inline-block; margin-bottom: 4px; font-size: 0.9rem; }
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-  th, td { text-align: right; padding: 7px 6px; border-bottom: 1px solid var(--border); }
-  th { color: var(--muted); font-weight: 600; font-size: 0.78rem; }
+  th, td { text-align: right; padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
   .empty { color: var(--muted); font-style: italic; }
-  .yes { color: #2e9e5b; font-weight: 600; }
+  .yes { color: #2fa968; font-weight: 600; }
   .no { color: var(--muted); }
 </style>
 </head>
