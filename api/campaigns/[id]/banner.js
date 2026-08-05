@@ -1,5 +1,6 @@
 const pool = require('../../../lib/db');
 const handlers = require('../../../lib/handlers');
+const users = require('../../../lib/users');
 const auth = require('../../../lib/auth');
 const { respond, handleError } = require('../../../lib/vercel-response');
 
@@ -18,9 +19,10 @@ module.exports = async (req, res) => {
       return;
     }
 
-    auth.requireAuth(req);
-    if (req.method === 'PUT') return respond(res, await handlers.setCampaignBanner(pool, id, req.body));
-    if (req.method === 'DELETE') return respond(res, await handlers.deleteCampaignBanner(pool, id));
+    const user = auth.requireAuth(req);
+    const brandScope = await users.getBrandScope(pool, user);
+    if (req.method === 'PUT') return respond(res, await handlers.setCampaignBanner(pool, id, req.body, brandScope));
+    if (req.method === 'DELETE') return respond(res, await handlers.deleteCampaignBanner(pool, id, brandScope));
     res.status(405).json({ error: 'method not allowed' });
   } catch (error) {
     handleError(res, error);

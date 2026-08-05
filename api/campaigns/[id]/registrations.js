@@ -1,5 +1,6 @@
 const pool = require('../../../lib/db');
 const handlers = require('../../../lib/handlers');
+const users = require('../../../lib/users');
 const auth = require('../../../lib/auth');
 const { respond, handleError } = require('../../../lib/vercel-response');
 
@@ -11,8 +12,11 @@ module.exports = async (req, res) => {
     // submission from the public campaign page, not an admin action.
     if (req.method === 'POST') return respond(res, await handlers.createRegistration(pool, id, req.body));
 
-    auth.requireAuth(req);
-    if (req.method === 'GET') return respond(res, await handlers.listRegistrations(pool, id));
+    const user = auth.requireAuth(req);
+    if (req.method === 'GET') {
+      const brandScope = await users.getBrandScope(pool, user);
+      return respond(res, await handlers.listRegistrations(pool, id, brandScope));
+    }
     res.status(405).json({ error: 'method not allowed' });
   } catch (error) {
     handleError(res, error);

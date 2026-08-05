@@ -37,6 +37,25 @@ async function seedUser(username, password, role) {
   if (result.rowCount > 0) console.log(`Seeded ${role} user (username '${username}').`);
 }
 
+// One-time bootstrap for the brand-access feature: the demo 'user'
+// account predates it, so without this it would suddenly see zero
+// brands/campaigns. Only runs if it has no assignments yet — an
+// admin narrowing its access later via ניהול משתמשים won't get
+// silently reset back to "all brands" on the next migrate.
+async function bootstrapDemoUserBrandAccess() {
+  const user = await pool.query("SELECT id FROM users WHERE username = 'user'");
+  if (user.rowCount === 0) return;
+  const userId = user.rows[0].id;
+  const existing = await pool.query('SELECT 1 FROM user_brands WHERE user_id = $1 LIMIT 1', [userId]);
+  if (existing.rowCount > 0) return;
+  const result = await pool.query(
+    `INSERT INTO user_brands (user_id, brand_id) SELECT $1, id FROM brands
+     ON CONFLICT DO NOTHING RETURNING brand_id`,
+    [userId]
+  );
+  if (result.rowCount > 0) console.log(`Granted demo 'user' access to ${result.rowCount} existing brand(s).`);
+}
+
 async function migrate() {
   const sql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
   await pool.query(sql);
@@ -44,6 +63,7 @@ async function migrate() {
   await backfillCampaignSlugs();
   await seedUser('admin', 'admin', 'admin');
   await seedUser('user', 'user', 'user');
+  await bootstrapDemoUserBrandAccess();
   console.log('Migration applied successfully.');
 }
 

@@ -22,6 +22,15 @@ CREATE TABLE IF NOT EXISTS brands (
 ALTER TABLE brands ADD COLUMN IF NOT EXISTS slug TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_brands_slug ON brands (slug) WHERE slug IS NOT NULL;
 
+-- Which brands a 'user'-role account can see/manage. Irrelevant for
+-- 'admin' accounts (they're unrestricted regardless of rows here).
+-- No rows for a user = sees nothing, until an admin assigns some.
+CREATE TABLE IF NOT EXISTS user_brands (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  brand_id INTEGER NOT NULL REFERENCES brands(id) ON DELETE CASCADE,
+  PRIMARY KEY (user_id, brand_id)
+);
+
 -- Campaigns, each belonging to a brand
 CREATE TABLE IF NOT EXISTS campaigns (
   id SERIAL PRIMARY KEY,

@@ -1,15 +1,18 @@
 const pool = require('../../lib/db');
 const handlers = require('../../lib/handlers');
+const users = require('../../lib/users');
 const auth = require('../../lib/auth');
 const { respond, handleError } = require('../../lib/vercel-response');
 
 module.exports = async (req, res) => {
   try {
-    // Any logged-in user can read brands (needed to pick one when
-    // creating/editing a campaign); managing the list is admin-only.
+    // Any logged-in user can read brands, scoped to their own
+    // assignment if they're a 'user' account; managing the list
+    // itself (add/rename/delete) is admin-only.
     if (req.method === 'GET') {
-      auth.requireAuth(req);
-      return respond(res, await handlers.listBrands(pool));
+      const user = auth.requireAuth(req);
+      const brandScope = await users.getBrandScope(pool, user);
+      return respond(res, await handlers.listBrands(pool, brandScope));
     }
     if (req.method === 'POST') {
       auth.requireAdmin(req);

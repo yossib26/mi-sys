@@ -30,7 +30,7 @@
   a { color: var(--accent); }
   h1 { font-size: 1.45rem; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
   p.subtitle { color: var(--muted); margin: 0 0 28px; font-size: 0.9rem; }
-  main { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  main { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
   header { display: flex; justify-content: space-between; align-items: flex-start; }
   section.card {
     background: var(--card);
@@ -39,7 +39,7 @@
     padding: 24px 26px;
   }
   section.card h2 { margin: 0 0 18px; font-size: 1rem; font-weight: 600; }
-  form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 18px; }
+  form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 10px; }
   .field { display: flex; flex-direction: column; gap: 5px; }
   .field label { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
   input, select {
@@ -74,6 +74,13 @@
   button.ghost:hover { background: var(--bg); }
   button.danger { background: var(--danger-soft); color: var(--danger); }
   button.danger:hover { filter: none; background: var(--danger); color: #fff; }
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; padding: 0;
+    border: 1px solid var(--border-strong); border-radius: 8px;
+    background: transparent; color: var(--text); cursor: pointer;
+  }
+  .icon-btn:hover { background: var(--bg); }
   .msg { font-size: 0.85rem; margin: 0 0 10px; min-height: 1.1em; }
   .msg.error { color: var(--danger); }
   .msg.success { color: #2fa968; }
@@ -83,8 +90,14 @@
   .badge { display: inline-block; padding: 3px 11px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
   .badge-admin { background: #eaf0ff; color: #3151d3; }
   .badge-user { background: #f1f2f4; color: #6b7280; }
+  .brand-chip { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 0.75rem; background: var(--bg); border: 1px solid var(--border-strong); margin: 1px; }
   .empty { color: var(--muted); font-style: italic; }
   .back-link { display: inline-block; margin-bottom: 4px; font-size: 0.9rem; }
+  .brand-checklist { display: flex; flex-wrap: wrap; gap: 8px 14px; padding: 10px 0; }
+  .brand-checklist label { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; }
+  .field-note { font-size: 0.78rem; color: var(--muted); margin: 0 0 10px; }
+  .edit-panel { background: var(--bg); border: 1px solid var(--border-strong); border-radius: 10px; padding: 14px; }
+  .edit-panel .actions { display: flex; gap: 8px; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -117,6 +130,10 @@
       </div>
       <button type="submit">הוסף משתמש</button>
     </form>
+    <div id="createBrandsWrap">
+      <p class="field-note">גישה למותגים (רלוונטי למשתמש רגיל בלבד — ללא בחירה, המשתמש לא יראה מותגים)</p>
+      <div class="brand-checklist" id="createBrandChecklist"></div>
+    </div>
     <p class="msg" id="formMsg"></p>
   </section>
 
@@ -127,18 +144,21 @@
         <tr>
           <th>שם משתמש</th>
           <th>תפקיד</th>
+          <th>מותגים</th>
           <th>נוצר בתאריך</th>
           <th>פעולות</th>
         </tr>
       </thead>
       <tbody id="userRows">
-        <tr><td colspan="4" class="empty">טוען…</td></tr>
+        <tr><td colspan="5" class="empty">טוען…</td></tr>
       </tbody>
     </table>
   </section>
 </main>
 
 <script>
+  const ICON_EDIT = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, (c) => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
@@ -163,6 +183,50 @@
   }
 
   let currentUserId = null;
+  let brandsCache = [];
+  let editingUserId = null;
+
+  function brandChecklistHtml(idPrefix, selectedIds) {
+    if (brandsCache.length === 0) return '<span class="empty">אין עדיין מותגים.</span>';
+    return brandsCache.map((b) => `
+      <label>
+        <input type="checkbox" id="${idPrefix}-${b.id}" value="${b.id}" ${selectedIds.includes(b.id) ? 'checked' : ''} />
+        ${escapeHtml(b.name)}
+      </label>
+    `).join('');
+  }
+
+  function getCheckedBrandIds(containerEl) {
+    return Array.from(containerEl.querySelectorAll('input[type=checkbox]:checked')).map((el) => Number(el.value));
+  }
+
+  async function loadBrandsCache() {
+    brandsCache = await api('/api/brands');
+    document.getElementById('createBrandChecklist').innerHTML = brandChecklistHtml('create-brand', []);
+  }
+
+  document.getElementById('role').addEventListener('change', (e) => {
+    document.getElementById('createBrandsWrap').style.display = e.target.value === 'user' ? '' : 'none';
+  });
+
+  function renderUserRow(u) {
+    const brandsHtml = u.role === 'admin'
+      ? '<span class="empty">כל המותגים</span>'
+      : (u.brands.length === 0 ? '<span class="empty">ללא גישה</span>' : u.brands.map((b) => `<span class="brand-chip">${escapeHtml(b.name)}</span>`).join(''));
+
+    return `
+      <tr data-row-for="${u.id}">
+        <td>${escapeHtml(u.username)}</td>
+        <td><span class="badge badge-${u.role}">${u.role === 'admin' ? 'אדמין' : 'משתמש רגיל'}</span></td>
+        <td>${brandsHtml}</td>
+        <td>${new Date(u.created_at).toLocaleDateString('he-IL')}</td>
+        <td style="display: flex; gap: 6px;">
+          <button class="icon-btn" data-edit-user="${u.id}" title="ערוך">${ICON_EDIT}</button>
+          ${u.id === currentUserId ? '' : `<button class="ghost danger" data-delete-user="${u.id}">מחק</button>`}
+        </td>
+      </tr>
+    `;
+  }
 
   async function loadUsers() {
     const rowsEl = document.getElementById('userRows');
@@ -170,37 +234,33 @@
     try {
       list = await api('/api/users');
     } catch (error) {
-      rowsEl.innerHTML = `<tr><td colspan="4" class="empty">${escapeHtml(error.message)}</td></tr>`;
+      rowsEl.innerHTML = `<tr><td colspan="5" class="empty">${escapeHtml(error.message)}</td></tr>`;
       return;
     }
 
     if (list.length === 0) {
-      rowsEl.innerHTML = '<tr><td colspan="4" class="empty">אין משתמשים.</td></tr>';
+      rowsEl.innerHTML = '<tr><td colspan="5" class="empty">אין משתמשים.</td></tr>';
       return;
     }
 
-    rowsEl.innerHTML = list.map((u) => `
-      <tr>
-        <td>${escapeHtml(u.username)}</td>
-        <td><span class="badge badge-${u.role}">${u.role === 'admin' ? 'אדמין' : 'משתמש רגיל'}</span></td>
-        <td>${new Date(u.created_at).toLocaleDateString('he-IL')}</td>
-        <td>
-          ${u.id === currentUserId ? '<span class="empty">(את/ה)</span>' : `<button class="ghost danger" data-delete-user="${u.id}">מחק</button>`}
-        </td>
-      </tr>
-    `).join('');
+    editingUserId = null;
+    rowsEl.innerHTML = list.map(renderUserRow).join('');
   }
 
   document.getElementById('userForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const role = document.getElementById('role').value;
     const payload = {
       username: document.getElementById('username').value.trim(),
       password: document.getElementById('password').value,
-      role: document.getElementById('role').value,
+      role,
+      brand_ids: role === 'user' ? getCheckedBrandIds(document.getElementById('createBrandChecklist')) : [],
     };
     try {
       await api('/api/users', { method: 'POST', body: JSON.stringify(payload) });
       e.target.reset();
+      document.getElementById('createBrandChecklist').innerHTML = brandChecklistHtml('create-brand', []);
+      document.getElementById('createBrandsWrap').style.display = '';
       showMsg('formMsg', '');
       await loadUsers();
     } catch (error) {
@@ -209,11 +269,64 @@
   });
 
   document.getElementById('userRows').addEventListener('click', async (e) => {
-    const id = e.target.getAttribute('data-delete-user');
-    if (!id) return;
+    const editBtn = e.target.closest('[data-edit-user]');
+    if (editBtn) {
+      const list = await api('/api/users');
+      const u = list.find((x) => String(x.id) === editBtn.getAttribute('data-edit-user'));
+      if (!u) return;
+      editingUserId = u.id;
+      const row = document.querySelector(`tr[data-row-for="${u.id}"]`);
+      const brandIds = u.brands.map((b) => b.id);
+      row.innerHTML = `
+        <td colspan="5">
+          <div class="edit-panel">
+            <div class="field" style="margin-bottom: 10px;">
+              <label for="edit-password-${u.id}">סיסמה חדשה (השאר ריק כדי לא לשנות)</label>
+              <input id="edit-password-${u.id}" type="password" minlength="4" />
+            </div>
+            ${u.role === 'user' ? `
+              <p class="field-note">גישה למותגים</p>
+              <div class="brand-checklist" id="edit-brands-${u.id}">${brandChecklistHtml('edit-brand-' + u.id, brandIds)}</div>
+            ` : '<p class="field-note">משתמש אדמין — גישה לכל המותגים, לא ניתן להגביל.</p>'}
+            <div class="actions">
+              <button data-save-user="${u.id}">שמור</button>
+              <button class="ghost" data-cancel-user="${u.id}">ביטול</button>
+            </div>
+          </div>
+        </td>
+      `;
+      return;
+    }
+
+    const cancelBtn = e.target.closest('[data-cancel-user]');
+    if (cancelBtn) {
+      await loadUsers();
+      return;
+    }
+
+    const saveBtn = e.target.closest('[data-save-user]');
+    if (saveBtn) {
+      const id = saveBtn.getAttribute('data-save-user');
+      const password = document.getElementById(`edit-password-${id}`).value;
+      const checklist = document.getElementById(`edit-brands-${id}`);
+      const payload = {};
+      if (password) payload.password = password;
+      if (checklist) payload.brand_ids = getCheckedBrandIds(checklist);
+      try {
+        await api(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        showMsg('formMsg', '');
+        await loadUsers();
+      } catch (error) {
+        showMsg('formMsg', error.message, 'error');
+      }
+      return;
+    }
+
+    const deleteId = e.target.getAttribute('data-delete-user');
+    if (!deleteId) return;
     if (!confirm('למחוק את המשתמש?')) return;
     try {
-      await api(`/api/users/${id}`, { method: 'DELETE' });
+      await api(`/api/users/${deleteId}`, { method: 'DELETE' });
       await loadUsers();
     } catch (error) {
       showMsg('formMsg', error.message, 'error');
@@ -228,6 +341,7 @@
         return;
       }
       currentUserId = me.id;
+      await loadBrandsCache();
       await loadUsers();
     } catch {
       location.href = '/login.html';
