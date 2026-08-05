@@ -27,6 +27,7 @@ const staticPages = {
   '/edit.html': 'edit.html',
   '/login.html': 'login.html',
   '/users.html': 'users.html',
+  '/brands.html': 'brands.html',
 };
 const htmlCache = Object.fromEntries(
   [...new Set(Object.values(staticPages))].map((file) => [file, fs.readFileSync(path.join(__dirname, file))])
@@ -85,6 +86,7 @@ const routes = [
   // (add/delete) is admin-only.
   { method: 'GET', pattern: /^\/api\/brands$/, auth: 'user', handler: () => handlers.listBrands(pool) },
   { method: 'POST', pattern: /^\/api\/brands$/, auth: 'admin', handler: async (req) => handlers.createBrand(pool, await readJsonBody(req)) },
+  { method: 'PUT', pattern: /^\/api\/brands\/(\d+)$/, auth: 'admin', handler: async (req, [id]) => handlers.updateBrand(pool, id, await readJsonBody(req)) },
   { method: 'DELETE', pattern: /^\/api\/brands\/(\d+)$/, auth: 'admin', handler: (_req, [id]) => handlers.deleteBrand(pool, id) },
   { method: 'GET', pattern: /^\/api\/campaigns$/, auth: 'user', handler: (_req, _m, query) => handlers.listCampaigns(pool, query) },
   { method: 'POST', pattern: /^\/api\/campaigns$/, auth: 'user', handler: async (req) => handlers.createCampaign(pool, await readJsonBody(req)) },

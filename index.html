@@ -127,14 +127,6 @@
   .msg { font-size: 0.85rem; margin: 0 0 10px; min-height: 1.1em; }
   .msg.error { color: var(--danger); }
   .table-wrap { overflow-x: auto; }
-  .list { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip {
-    display: flex; align-items: center; gap: 8px;
-    border: 1px solid var(--border-strong); border-radius: 999px;
-    background: var(--bg);
-    padding: 6px 6px 6px 14px; font-size: 0.85rem;
-  }
-  .chip button { padding: 3px 10px; font-size: 0.75rem; }
   .field-wide { flex: 1 1 200px; }
   .filter-field { margin-bottom: 14px; max-width: 240px; }
   .top-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
@@ -152,19 +144,6 @@
     </div>
     <div class="user-info" id="userInfo"></div>
   </div>
-
-  <section class="card" id="brandsSection">
-    <h2>מותגים</h2>
-    <p class="msg" id="brandMsg"></p>
-    <form id="brandForm">
-      <div class="field">
-        <label for="brandName">שם מותג</label>
-        <input id="brandName" name="name" required placeholder="לדוגמה: Nike" />
-      </div>
-      <button type="submit">הוסף מותג</button>
-    </form>
-    <div class="list" id="brandList"><p class="empty">טוען…</p></div>
-  </section>
 
   <section class="card">
     <h2>קמפיינים</h2>
@@ -252,6 +231,7 @@
     currentUser = await res.json();
     document.getElementById('userInfo').innerHTML = `
       <span>${escapeHtml(currentUser.username)} · ${currentUser.role === 'admin' ? 'אדמין' : 'משתמש רגיל'}</span>
+      ${currentUser.role === 'admin' ? '<a href="/brands.html">ניהול מותגים</a>' : ''}
       ${currentUser.role === 'admin' ? '<a href="/users.html">ניהול משתמשים</a>' : ''}
       <a href="#" id="logoutLink">התנתקות</a>
     `;
@@ -260,11 +240,6 @@
       await fetch('/api/auth/logout', { method: 'POST' });
       location.href = '/login.html';
     });
-    // Brand management (add/delete) is admin-only; regular users still
-    // get the brand dropdown when creating/editing a campaign.
-    if (currentUser.role !== 'admin') {
-      document.getElementById('brandsSection').style.display = 'none';
-    }
     return true;
   }
 
@@ -306,23 +281,12 @@
   }
 
   async function loadBrands() {
-    const listEl = document.getElementById('brandList');
     try {
       brandsCache = await api('/api/brands');
     } catch (error) {
-      listEl.innerHTML = '';
-      showMsg('brandMsg', error.message, true);
+      showMsg('campaignMsg', error.message, true);
       return;
     }
-
-    listEl.innerHTML = brandsCache.length
-      ? brandsCache.map((b) => `
-        <span class="chip">
-          ${escapeHtml(b.name)}
-          <button class="ghost danger" data-delete-brand="${b.id}">מחק</button>
-        </span>
-      `).join('')
-      : '<p class="empty">אין עדיין מותגים.</p>';
 
     const brandSelect = document.getElementById('campaignBrand');
     const filterSelect = document.getElementById('filterBrand');
@@ -456,32 +420,6 @@
       </tr>
     `).join('');
   }
-
-  document.getElementById('brandForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('brandName').value.trim();
-    if (!name) return;
-    try {
-      await api('/api/brands', { method: 'POST', body: JSON.stringify({ name }) });
-      document.getElementById('brandName').value = '';
-      showMsg('brandMsg', '');
-      await loadBrands();
-    } catch (error) {
-      showMsg('brandMsg', error.message, true);
-    }
-  });
-
-  document.getElementById('brandList').addEventListener('click', async (e) => {
-    const id = e.target.getAttribute('data-delete-brand');
-    if (!id) return;
-    if (!confirm('למחוק את המותג? כל הקמפיינים שלו יימחקו גם הם.')) return;
-    try {
-      await api(`/api/brands/${id}`, { method: 'DELETE' });
-      await Promise.all([loadBrands(), loadCampaigns()]);
-    } catch (error) {
-      showMsg('brandMsg', error.message, true);
-    }
-  });
 
   document.getElementById('campaignForm').addEventListener('submit', async (e) => {
     e.preventDefault();
