@@ -394,9 +394,9 @@
           </select>
         </td>
         <td>
-          ${c.slug ? `
-            <a href="/c/${encodeURIComponent(c.slug)}" target="_blank" rel="noopener">פתח ↗</a>
-            <button class="ghost" data-copy-link="${escapeHtml(c.slug)}">העתק</button>
+          ${c.slug && c.brand_slug ? `
+            <a href="/c/${encodeURIComponent(c.brand_slug)}/${encodeURIComponent(c.slug)}" target="_blank" rel="noopener">פתח ↗</a>
+            <button class="ghost" data-copy-brand="${escapeHtml(c.brand_slug)}" data-copy-campaign="${escapeHtml(c.slug)}">העתק</button>
           ` : '-'}
         </td>
         <td class="row-actions">
@@ -472,9 +472,10 @@
   });
 
   document.getElementById('campaignRows').addEventListener('click', async (e) => {
-    const slug = e.target.getAttribute('data-copy-link');
-    if (slug) {
-      const url = `${location.origin}/c/${encodeURIComponent(slug)}`;
+    const brandSlug = e.target.getAttribute('data-copy-brand');
+    const campaignSlug = e.target.getAttribute('data-copy-campaign');
+    if (brandSlug && campaignSlug) {
+      const url = `${location.origin}/c/${encodeURIComponent(brandSlug)}/${encodeURIComponent(campaignSlug)}`;
       try {
         await navigator.clipboard.writeText(url);
         const original = e.target.textContent;

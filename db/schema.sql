@@ -5,6 +5,12 @@ CREATE TABLE IF NOT EXISTS brands (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- English-only URL segment for the brand (e.g. /c/nova-cosmetics-4/...).
+-- Nullable so it can be backfilled on existing rows; partial index
+-- keeps it unique once set.
+ALTER TABLE brands ADD COLUMN IF NOT EXISTS slug TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_brands_slug ON brands (slug) WHERE slug IS NOT NULL;
+
 -- Campaigns, each belonging to a brand
 CREATE TABLE IF NOT EXISTS campaigns (
   id SERIAL PRIMARY KEY,
@@ -29,9 +35,10 @@ ALTER TABLE campaigns DROP CONSTRAINT IF EXISTS campaigns_status_check;
 ALTER TABLE campaigns ADD CONSTRAINT campaigns_status_check
   CHECK (status IN ('draft', 'active', 'paused', 'completed', 'cancelled', 'archived'));
 
--- Public shareable URL slug (e.g. /c/summer-sale-9). Nullable so it
--- can be backfilled on existing rows; partial index keeps it unique
--- once set.
+-- Public shareable URL slug — combined with the brand's own slug to
+-- form /c/:brandSlug/:campaignSlug (e.g. /c/nova-cosmetics-4/summer-sale-9).
+-- Nullable so it can be backfilled on existing rows; partial index
+-- keeps it unique once set.
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS slug TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_campaigns_slug ON campaigns (slug) WHERE slug IS NOT NULL;
 

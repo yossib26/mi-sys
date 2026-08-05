@@ -1,6 +1,6 @@
-const pool = require('../../lib/db');
-const handlers = require('../../lib/handlers');
-const { renderCampaignPage, renderNotFoundPage } = require('../../lib/campaign-page');
+const pool = require('../../../lib/db');
+const handlers = require('../../../lib/handlers');
+const { renderCampaignPage, renderNotFoundPage } = require('../../../lib/campaign-page');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
     return;
   }
   try {
-    const { body: campaign } = await handlers.getCampaignBySlug(pool, req.query.slug);
+    const { body: campaign } = await handlers.getCampaignBySlug(pool, req.query.brandSlug, req.query.campaignSlug);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.status(200).send(renderCampaignPage(campaign));
   } catch (error) {

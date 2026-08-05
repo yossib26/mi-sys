@@ -83,10 +83,14 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    const slugMatch = req.method === 'GET' && url.pathname.match(/^\/c\/([^/]+)$/);
+    const slugMatch = req.method === 'GET' && url.pathname.match(/^\/c\/([^/]+)\/([^/]+)$/);
     if (slugMatch) {
       try {
-        const { body: campaign } = await handlers.getCampaignBySlug(pool, decodeURIComponent(slugMatch[1]));
+        const { body: campaign } = await handlers.getCampaignBySlug(
+          pool,
+          decodeURIComponent(slugMatch[1]),
+          decodeURIComponent(slugMatch[2])
+        );
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(renderCampaignPage(campaign));
       } catch (error) {
