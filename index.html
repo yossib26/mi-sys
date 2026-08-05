@@ -105,6 +105,14 @@
     padding: 5px 6px 5px 12px; font-size: 0.85rem;
   }
   .chip button { padding: 2px 8px; font-size: 0.75rem; }
+  .banner-thumb { width: 56px; height: 34px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); display: block; margin-bottom: 4px; }
+  .upload-label {
+    display: inline-block; padding: 4px 10px; font-size: 0.78rem;
+    border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+    background: transparent; color: var(--text);
+  }
+  .upload-label:hover { filter: brightness(1.08); }
+  .banner-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
   .field-wide { flex: 1 1 200px; }
   .filter-field { margin-bottom: 12px; max-width: 240px; }
 </style>
@@ -179,11 +187,12 @@
             <th>סיום</th>
             <th>סטטוס</th>
             <th>קישור</th>
+            <th>באנר</th>
             <th>פעולות</th>
           </tr>
         </thead>
         <tbody id="campaignRows">
-          <tr><td colspan="9" class="empty">טוען…</td></tr>
+          <tr><td colspan="10" class="empty">טוען…</td></tr>
         </tbody>
       </table>
     </div>
@@ -289,12 +298,12 @@
     try {
       campaigns = await api('/api/campaigns' + query);
     } catch (error) {
-      rowsEl.innerHTML = `<tr><td colspan="9" class="empty">${escapeHtml(error.message)}</td></tr>`;
+      rowsEl.innerHTML = `<tr><td colspan="10" class="empty">${escapeHtml(error.message)}</td></tr>`;
       return;
     }
 
     if (campaigns.length === 0) {
-      rowsEl.innerHTML = '<tr><td colspan="9" class="empty">אין עדיין קמפיינים.</td></tr>';
+      rowsEl.innerHTML = '<tr><td colspan="10" class="empty">אין עדיין קמפיינים.</td></tr>';
       return;
     }
 
@@ -316,6 +325,16 @@
             <a href="/c/${encodeURIComponent(c.slug)}" target="_blank" rel="noopener">פתח ↗</a>
             <button class="ghost" data-copy-link="${escapeHtml(c.slug)}">העתק</button>
           ` : '-'}
+        </td>
+        <td class="banner-cell">
+          ${c.has_banner ? `
+            <img class="banner-thumb" src="/api/campaigns/${c.id}/banner" alt="" />
+            <button class="ghost danger" data-remove-banner="${c.id}">הסר</button>
+          ` : ''}
+          <label class="upload-label">
+            ${c.has_banner ? 'החלף' : 'העלה'}
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-upload-banner="${c.id}" hidden />
+          </label>
         </td>
         <td class="row-actions">
           <button class="ghost danger" data-delete-campaign="${c.id}">מחק</button>
@@ -376,14 +395,43 @@
   });
 
   document.getElementById('campaignRows').addEventListener('change', async (e) => {
-    const id = e.target.getAttribute('data-status-for');
-    if (!id) return;
-    try {
-      await api(`/api/campaigns/${id}`, { method: 'PUT', body: JSON.stringify({ status: e.target.value }) });
-      showMsg('campaignMsg', '');
-    } catch (error) {
-      showMsg('campaignMsg', error.message, true);
-      await loadCampaigns();
+    const statusId = e.target.getAttribute('data-status-for');
+    if (statusId) {
+      try {
+        await api(`/api/campaigns/${statusId}`, { method: 'PUT', body: JSON.stringify({ status: e.target.value }) });
+        showMsg('campaignMsg', '');
+      } catch (error) {
+        showMsg('campaignMsg', error.message, true);
+        await loadCampaigns();
+      }
+      return;
+    }
+
+    const bannerId = e.target.getAttribute('data-upload-banner');
+    if (bannerId) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const MAX_BANNER_BYTES = 2 * 1024 * 1024;
+      if (file.size > MAX_BANNER_BYTES) {
+        showMsg('campaignMsg', 'הקובץ גדול מדי (מקסימום 2MB)', true);
+        e.target.value = '';
+        return;
+      }
+      try {
+        const dataUri = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('קריאת הקובץ נכשלה'));
+          reader.readAsDataURL(file);
+        });
+        await api(`/api/campaigns/${bannerId}/banner`, { method: 'PUT', body: JSON.stringify({ image: dataUri }) });
+        showMsg('campaignMsg', '');
+        await loadCampaigns();
+      } catch (error) {
+        showMsg('campaignMsg', error.message, true);
+      } finally {
+        e.target.value = '';
+      }
     }
   });
 
@@ -398,6 +446,18 @@
         setTimeout(() => { e.target.textContent = original; }, 1500);
       } catch {
         prompt('העתק את הקישור:', url);
+      }
+      return;
+    }
+
+    const bannerId = e.target.getAttribute('data-remove-banner');
+    if (bannerId) {
+      if (!confirm('להסיר את הבאנר?')) return;
+      try {
+        await api(`/api/campaigns/${bannerId}/banner`, { method: 'DELETE' });
+        await loadCampaigns();
+      } catch (error) {
+        showMsg('campaignMsg', error.message, true);
       }
       return;
     }

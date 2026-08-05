@@ -30,7 +30,7 @@ function readJsonBody(req) {
     let body = '';
     req.on('data', (chunk) => {
       body += chunk;
-      if (body.length > 1e6) {
+      if (body.length > 6e6) { // banner images arrive as base64 JSON, ~4-5MB
         req.destroy();
         reject(new Error('Request body too large'));
       }
@@ -57,6 +57,8 @@ const routes = [
   { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)$/, handler: (_req, [id]) => handlers.getCampaign(pool, id) },
   { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)$/, handler: async (req, [id]) => handlers.updateCampaign(pool, id, await readJsonBody(req)) },
   { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)$/, handler: (_req, [id]) => handlers.deleteCampaign(pool, id) },
+  { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/banner$/, handler: async (req, [id]) => handlers.setCampaignBanner(pool, id, await readJsonBody(req)) },
+  { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/banner$/, handler: (_req, [id]) => handlers.deleteCampaignBanner(pool, id) },
 ];
 
 const server = http.createServer(async (req, res) => {
@@ -78,6 +80,18 @@ const server = http.createServer(async (req, res) => {
       } catch (error) {
         res.writeHead(error.statusCode || 500, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(renderNotFoundPage());
+      }
+      return;
+    }
+
+    const bannerMatch = req.method === 'GET' && url.pathname.match(/^\/api\/campaigns\/(\d+)\/banner$/);
+    if (bannerMatch) {
+      try {
+        const { mime, buffer } = await handlers.getCampaignBanner(pool, bannerMatch[1]);
+        res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=3600' });
+        res.end(buffer);
+      } catch (error) {
+        sendJson(res, error.statusCode || 500, { error: error.message });
       }
       return;
     }

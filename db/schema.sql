@@ -28,6 +28,11 @@ CREATE INDEX IF NOT EXISTS idx_campaigns_brand_id ON campaigns (brand_id);
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS slug TEXT;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_campaigns_slug ON campaigns (slug) WHERE slug IS NOT NULL;
 
+-- Marketing banner image, stored inline (kept out of SELECT * lists —
+-- see lib/handlers.js — so listing campaigns stays cheap).
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS banner BYTEA;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS banner_mime TEXT;
+
 -- Keep updated_at current on every campaign update
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
