@@ -1,5 +1,6 @@
 const pool = require('../../../lib/db');
 const handlers = require('../../../lib/handlers');
+const auth = require('../../../lib/auth');
 const { handleError } = require('../../../lib/vercel-response');
 
 module.exports = async (req, res) => {
@@ -8,6 +9,9 @@ module.exports = async (req, res) => {
       res.status(405).json({ error: 'method not allowed' });
       return;
     }
+    // Registrant invoices carry PII — unlike the campaign banner,
+    // this is not part of the public page.
+    auth.requireAuth(req);
     const { id } = req.query;
     const { mime, buffer, filename } = await handlers.getRegistrationInvoice(pool, id);
     res.setHeader('Content-Type', mime);

@@ -1,11 +1,15 @@
 const pool = require('../../../lib/db');
 const handlers = require('../../../lib/handlers');
+const auth = require('../../../lib/auth');
 const { respond, handleError } = require('../../../lib/vercel-response');
 
 module.exports = async (req, res) => {
   try {
     const { id } = req.query;
 
+    // GET stays public — the banner has to render on the
+    // unauthenticated public campaign page, not just the admin
+    // edit page.
     if (req.method === 'GET') {
       const { mime, buffer } = await handlers.getCampaignBanner(pool, id);
       res.setHeader('Content-Type', mime);
@@ -13,6 +17,8 @@ module.exports = async (req, res) => {
       res.status(200).send(buffer);
       return;
     }
+
+    auth.requireAuth(req);
     if (req.method === 'PUT') return respond(res, await handlers.setCampaignBanner(pool, id, req.body));
     if (req.method === 'DELETE') return respond(res, await handlers.deleteCampaignBanner(pool, id));
     res.status(405).json({ error: 'method not allowed' });

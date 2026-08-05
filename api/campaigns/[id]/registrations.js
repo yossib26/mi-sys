@@ -1,12 +1,18 @@
 const pool = require('../../../lib/db');
 const handlers = require('../../../lib/handlers');
+const auth = require('../../../lib/auth');
 const { respond, handleError } = require('../../../lib/vercel-response');
 
 module.exports = async (req, res) => {
   try {
     const { id } = req.query;
-    if (req.method === 'GET') return respond(res, await handlers.listRegistrations(pool, id));
+
+    // POST stays public — this is the visitor-facing sign-up
+    // submission from the public campaign page, not an admin action.
     if (req.method === 'POST') return respond(res, await handlers.createRegistration(pool, id, req.body));
+
+    auth.requireAuth(req);
+    if (req.method === 'GET') return respond(res, await handlers.listRegistrations(pool, id));
     res.status(405).json({ error: 'method not allowed' });
   } catch (error) {
     handleError(res, error);

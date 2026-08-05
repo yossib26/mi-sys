@@ -1,3 +1,14 @@
+-- Users: two roles. 'admin' manages users and archives campaigns;
+-- 'user' creates/edits campaigns and views their stats/registrants.
+-- Passwords are bcrypt hashes, never plaintext.
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'user')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Brands
 CREATE TABLE IF NOT EXISTS brands (
   id SERIAL PRIMARY KEY,

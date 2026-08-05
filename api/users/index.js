@@ -1,13 +1,13 @@
 const pool = require('../../lib/db');
-const handlers = require('../../lib/handlers');
+const users = require('../../lib/users');
 const auth = require('../../lib/auth');
 const { respond, handleError } = require('../../lib/vercel-response');
 
 module.exports = async (req, res) => {
   try {
     auth.requireAdmin(req);
-    const { id } = req.query;
-    if (req.method === 'DELETE') return respond(res, await handlers.deleteBrand(pool, id));
+    if (req.method === 'GET') return respond(res, await users.listUsers(pool));
+    if (req.method === 'POST') return respond(res, await users.createUser(pool, req.body));
     res.status(405).json({ error: 'method not allowed' });
   } catch (error) {
     handleError(res, error);

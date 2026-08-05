@@ -132,16 +132,23 @@
   .chip button { padding: 3px 10px; font-size: 0.75rem; }
   .field-wide { flex: 1 1 200px; }
   .filter-field { margin-bottom: 14px; max-width: 240px; }
+  .top-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+  .user-info { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--muted); }
+  .user-info a { color: var(--text); text-decoration: none; border: 1px solid var(--border-strong); border-radius: 10px; padding: 6px 12px; }
+  .user-info a:hover { background: var(--bg); }
 </style>
 </head>
 <body>
 <main>
-  <div>
-    <h1>ניהול קמפיינים למותגים</h1>
-    <p class="subtitle">מחובר ל-Neon PostgreSQL · <span id="dbStatus">בודק חיבור…</span></p>
+  <div class="top-bar">
+    <div>
+      <h1>ניהול קמפיינים למותגים</h1>
+      <p class="subtitle">מחובר ל-Neon PostgreSQL · <span id="dbStatus">בודק חיבור…</span></p>
+    </div>
+    <div class="user-info" id="userInfo"></div>
   </div>
 
-  <section class="card">
+  <section class="card" id="brandsSection">
     <h2>מותגים</h2>
     <p class="msg" id="brandMsg"></p>
     <form id="brandForm">
@@ -229,6 +236,32 @@
   };
 
   let brandsCache = [];
+  let currentUser = null;
+
+  async function initAuth() {
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) {
+      location.href = '/login.html';
+      return false;
+    }
+    currentUser = await res.json();
+    document.getElementById('userInfo').innerHTML = `
+      <span>${escapeHtml(currentUser.username)} · ${currentUser.role === 'admin' ? 'אדמין' : 'משתמש רגיל'}</span>
+      ${currentUser.role === 'admin' ? '<a href="/users.html">ניהול משתמשים</a>' : ''}
+      <a href="#" id="logoutLink">התנתקות</a>
+    `;
+    document.getElementById('logoutLink').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch('/api/auth/logout', { method: 'POST' });
+      location.href = '/login.html';
+    });
+    // Brand management (add/delete) is admin-only; regular users still
+    // get the brand dropdown when creating/editing a campaign.
+    if (currentUser.role !== 'admin') {
+      document.getElementById('brandsSection').style.display = 'none';
+    }
+    return true;
+  }
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, (c) => ({
@@ -390,7 +423,7 @@
         <td>${formatDate(c.end_date)}</td>
         <td>
           <select class="status-select" data-status-for="${c.id}">
-            ${STATUSES.map((s) => `<option value="${s}" ${s === c.status ? 'selected' : ''}>${STATUS_LABELS[s]}</option>`).join('')}
+            ${STATUSES.map((s) => `<option value="${s}" ${s === c.status ? 'selected' : ''} ${s === 'archived' && (!currentUser || currentUser.role !== 'admin') ? 'disabled' : ''}>${STATUS_LABELS[s]}</option>`).join('')}
           </select>
         </td>
         <td>
@@ -401,7 +434,7 @@
         </td>
         <td class="row-actions">
           <a href="/edit.html?id=${c.id}">ערוך</a>
-          ${c.status !== 'archived' ? `<button class="ghost danger" data-delete-campaign="${c.id}">ארכב</button>` : ''}
+          ${c.status !== 'archived' && currentUser && currentUser.role === 'admin' ? `<button class="ghost danger" data-delete-campaign="${c.id}">ארכב</button>` : ''}
         </td>
       </tr>
     `).join('');
@@ -518,8 +551,11 @@
     loadCampaigns();
   });
 
-  checkStatus();
-  loadBrands().then(loadCampaigns);
+  initAuth().then((ok) => {
+    if (!ok) return;
+    checkStatus();
+    loadBrands().then(loadCampaigns);
+  });
 </script>
 </body>
 </html>
