@@ -90,6 +90,7 @@ const routes = [
   { method: 'DELETE', pattern: /^\/api\/brands\/(\d+)$/, auth: 'admin', handler: (_req, [id]) => handlers.deleteBrand(pool, id) },
   { method: 'GET', pattern: /^\/api\/campaigns$/, auth: 'user', handler: (_req, _m, query) => handlers.listCampaigns(pool, query) },
   { method: 'POST', pattern: /^\/api\/campaigns$/, auth: 'user', handler: async (req) => handlers.createCampaign(pool, await readJsonBody(req)) },
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/duplicate$/, auth: 'user', handler: (_req, [id]) => handlers.duplicateCampaign(pool, id) },
   { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)$/, auth: 'user', handler: (_req, [id]) => handlers.getCampaign(pool, id) },
   { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)$/, auth: 'user', handler: async (req, [id]) => {
     const body = await readJsonBody(req);

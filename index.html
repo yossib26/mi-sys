@@ -118,12 +118,17 @@
   .badge-archived { background: #f1f2f4; color: #6b7280; }
   .status-select { font-size: 0.82rem; }
   .row-actions { display: flex; gap: 6px; align-items: center; }
-  .row-actions a {
-    display: inline-block; padding: 6px 12px; font-size: 0.85rem; font-weight: 500;
-    border: 1px solid var(--border-strong); border-radius: 10px;
-    color: var(--text); text-decoration: none; transition: background 0.15s ease;
+  .icon-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; padding: 0;
+    border: 1px solid var(--border-strong); border-radius: 8px;
+    background: transparent; color: var(--text); text-decoration: none;
+    cursor: pointer; transition: background 0.15s ease;
   }
-  .row-actions a:hover { background: var(--bg); }
+  .icon-btn:hover { background: var(--bg); }
+  .icon-btn.danger { color: var(--danger); }
+  .icon-btn.danger:hover { background: var(--danger-soft); }
+  .icon-btn:disabled { opacity: 0.5; cursor: default; }
   .msg { font-size: 0.85rem; margin: 0 0 10px; min-height: 1.1em; }
   .msg.error { color: var(--danger); }
   .table-wrap { overflow-x: auto; }
@@ -189,8 +194,6 @@
           <tr id="campaignHeaderRow">
             <th data-sort="brand_name">מותג</th>
             <th data-sort="name">שם</th>
-            <th>תיאור</th>
-            <th data-sort="budget">תקציב</th>
             <th data-sort="start_date">התחלה</th>
             <th data-sort="end_date">סיום</th>
             <th data-sort="status">סטטוס</th>
@@ -202,7 +205,7 @@
           </tr>
         </thead>
         <tbody id="campaignRows">
-          <tr><td colspan="12" class="empty">טוען…</td></tr>
+          <tr><td colspan="10" class="empty">טוען…</td></tr>
         </tbody>
       </table>
     </div>
@@ -224,6 +227,10 @@
 
   let brandsCache = [];
   let currentUser = null;
+
+  const ICON_EDIT = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+  const ICON_DUPLICATE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+  const ICON_ARCHIVE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8"/><path d="M10 13h4"/></svg>';
 
   async function initAuth() {
     const res = await fetch('/api/auth/me');
@@ -308,11 +315,6 @@
     return value || '-';
   }
 
-  function formatBudget(value) {
-    if (value === null || value === undefined) return '-';
-    return Number(value).toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
   const PAGE_SIZE_OPTIONS = [10, 19, 25, 50, 100];
   const sortState = { sort: 'created_at', order: 'desc' };
   let currentPage = 1;
@@ -378,7 +380,7 @@
     try {
       result = await api('/api/campaigns?' + params.toString());
     } catch (error) {
-      rowsEl.innerHTML = `<tr><td colspan="12" class="empty">${escapeHtml(error.message)}</td></tr>`;
+      rowsEl.innerHTML = `<tr><td colspan="10" class="empty">${escapeHtml(error.message)}</td></tr>`;
       document.getElementById('pagination').innerHTML = '';
       return;
     }
@@ -393,7 +395,7 @@
     const campaigns = result.rows;
 
     if (campaigns.length === 0) {
-      rowsEl.innerHTML = '<tr><td colspan="12" class="empty">אין עדיין קמפיינים.</td></tr>';
+      rowsEl.innerHTML = '<tr><td colspan="10" class="empty">אין עדיין קמפיינים.</td></tr>';
       return;
     }
 
@@ -401,8 +403,6 @@
       <tr>
         <td>${escapeHtml(c.brand_name)}</td>
         <td>${escapeHtml(c.name)}</td>
-        <td>${escapeHtml(c.description) || '-'}</td>
-        <td>${formatBudget(c.budget)}</td>
         <td>${formatDate(c.start_date)}</td>
         <td>${formatDate(c.end_date)}</td>
         <td>
@@ -416,12 +416,12 @@
         <td>
           ${c.slug && c.brand_slug ? `
             <a href="/c/${encodeURIComponent(c.brand_slug)}/${encodeURIComponent(c.slug)}" target="_blank" rel="noopener">פתח ↗</a>
-            <button class="ghost" data-copy-brand="${escapeHtml(c.brand_slug)}" data-copy-campaign="${escapeHtml(c.slug)}">העתק</button>
           ` : '-'}
         </td>
         <td class="row-actions">
-          <a href="/edit.html?id=${c.id}">ערוך</a>
-          ${c.status !== 'archived' && currentUser && currentUser.role === 'admin' ? `<button class="ghost danger" data-delete-campaign="${c.id}">ארכב</button>` : ''}
+          <a class="icon-btn" href="/edit.html?id=${c.id}" title="ערוך">${ICON_EDIT}</a>
+          <button class="icon-btn" data-duplicate-campaign="${c.id}" title="שכפל">${ICON_DUPLICATE}</button>
+          ${c.status !== 'archived' && currentUser && currentUser.role === 'admin' ? `<button class="icon-btn danger" data-delete-campaign="${c.id}" title="ארכב">${ICON_ARCHIVE}</button>` : ''}
         </td>
       </tr>
     `).join('');
@@ -466,22 +466,22 @@
   });
 
   document.getElementById('campaignRows').addEventListener('click', async (e) => {
-    const brandSlug = e.target.getAttribute('data-copy-brand');
-    const campaignSlug = e.target.getAttribute('data-copy-campaign');
-    if (brandSlug && campaignSlug) {
-      const url = `${location.origin}/c/${encodeURIComponent(brandSlug)}/${encodeURIComponent(campaignSlug)}`;
+    const duplicateBtn = e.target.closest('[data-duplicate-campaign]');
+    if (duplicateBtn) {
+      const duplicateId = duplicateBtn.getAttribute('data-duplicate-campaign');
+      duplicateBtn.disabled = true;
       try {
-        await navigator.clipboard.writeText(url);
-        const original = e.target.textContent;
-        e.target.textContent = 'הועתק!';
-        setTimeout(() => { e.target.textContent = original; }, 1500);
-      } catch {
-        prompt('העתק את הקישור:', url);
+        const copy = await api(`/api/campaigns/${duplicateId}/duplicate`, { method: 'POST' });
+        location.href = `/edit.html?id=${copy.id}`;
+      } catch (error) {
+        showMsg('campaignMsg', error.message, true);
+        duplicateBtn.disabled = false;
       }
       return;
     }
 
-    const id = e.target.getAttribute('data-delete-campaign');
+    const deleteBtn = e.target.closest('[data-delete-campaign]');
+    const id = deleteBtn && deleteBtn.getAttribute('data-delete-campaign');
     if (!id) return;
     const typed = prompt('הקמפיין לא יימחק — הוא יועבר לארכיון. להמשך, הקלד/י DELETE:');
     if (typed !== 'DELETE') return;
