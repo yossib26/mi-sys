@@ -128,6 +128,7 @@
   .badge-paused { background: #e0a020; }
   .badge-completed { background: #4361ee; }
   .badge-cancelled { background: #e0455a; }
+  .badge-archived { background: #6b7280; }
   .status-select { font-size: 0.82rem; }
   .row-actions { display: flex; gap: 6px; align-items: center; }
   .row-actions a {
@@ -235,13 +236,14 @@
 </main>
 
 <script>
-  const STATUSES = ['draft', 'active', 'paused', 'completed', 'cancelled'];
+  const STATUSES = ['draft', 'active', 'paused', 'completed', 'cancelled', 'archived'];
   const STATUS_LABELS = {
     draft: 'טיוטה',
     active: 'פעיל',
     paused: 'מושהה',
     completed: 'הושלם',
     cancelled: 'בוטל',
+    archived: 'בארכיון',
   };
 
   let brandsCache = [];
@@ -417,7 +419,7 @@
         </td>
         <td class="row-actions">
           <a href="/edit.html?id=${c.id}">ערוך</a>
-          <button class="ghost danger" data-delete-campaign="${c.id}">מחק</button>
+          ${c.status !== 'archived' ? `<button class="ghost danger" data-delete-campaign="${c.id}">ארכב</button>` : ''}
         </td>
       </tr>
     `).join('');
@@ -504,7 +506,8 @@
 
     const id = e.target.getAttribute('data-delete-campaign');
     if (!id) return;
-    if (!confirm('למחוק את הקמפיין?')) return;
+    const typed = prompt('הקמפיין לא יימחק — הוא יועבר לארכיון. להמשך, הקלד/י DELETE:');
+    if (typed !== 'DELETE') return;
     try {
       await api(`/api/campaigns/${id}`, { method: 'DELETE' });
       await loadCampaigns();

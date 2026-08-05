@@ -109,7 +109,7 @@
     background: transparent; color: var(--text); transition: background 0.15s ease;
   }
   .upload-label:hover { background: var(--bg); }
-  .actions { display: flex; gap: 10px; justify-content: flex-start; }
+  .actions { display: flex; gap: 10px; justify-content: flex-start; margin-top: 20px; }
   .back-link { display: inline-block; margin-bottom: 4px; font-size: 0.9rem; }
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
@@ -156,6 +156,7 @@
             <option value="paused">מושהה</option>
             <option value="completed">הושלם</option>
             <option value="cancelled">בוטל</option>
+            <option value="archived">בארכיון</option>
           </select>
         </div>
         <div class="field">
@@ -168,7 +169,7 @@
         </div>
       </div>
 
-      <div class="actions" style="margin-top: 20px;">
+      <div class="actions">
         <button type="submit">שמור שינויים</button>
       </div>
       <p class="msg" id="formMsg"></p>

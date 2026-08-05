@@ -22,6 +22,13 @@ CREATE TABLE IF NOT EXISTS campaigns (
 
 CREATE INDEX IF NOT EXISTS idx_campaigns_brand_id ON campaigns (brand_id);
 
+-- 'archived' added: "deleting" a campaign from the admin UI archives
+-- it in place rather than removing the row (and its registrations),
+-- so the check constraint needs to allow that value too.
+ALTER TABLE campaigns DROP CONSTRAINT IF EXISTS campaigns_status_check;
+ALTER TABLE campaigns ADD CONSTRAINT campaigns_status_check
+  CHECK (status IN ('draft', 'active', 'paused', 'completed', 'cancelled', 'archived'));
+
 -- Public shareable URL slug (e.g. /c/summer-sale-9). Nullable so it
 -- can be backfilled on existing rows; partial index keeps it unique
 -- once set.
