@@ -40,6 +40,14 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_campaigns_slug ON campaigns (slug) WHERE s
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS banner BYTEA;
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS banner_mime TEXT;
 
+-- Visual template for the public /c/:slug page — one of a fixed set
+-- defined in lib/campaign-page.js. 'classic' is the default for new
+-- campaigns and for any pre-existing row.
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS template TEXT NOT NULL DEFAULT 'classic';
+ALTER TABLE campaigns DROP CONSTRAINT IF EXISTS campaigns_template_check;
+ALTER TABLE campaigns ADD CONSTRAINT campaigns_template_check
+  CHECK (template IN ('classic', 'bold', 'minimal'));
+
 -- Superseded by the registrations table below: contact info + invoice
 -- are per-registrant (many per campaign), not a single field on the
 -- campaign itself.

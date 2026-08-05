@@ -19,21 +19,7 @@
     --danger-soft: #fdeef0;
     --radius: 16px;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #17181d;
-      --card: #1d1f25;
-      --border: #262830;
-      --border-strong: #313339;
-      --text: #e8e9ec;
-      --muted: #8b8f99;
-      --accent: #7b93f8;
-      --accent-soft: #222944;
-      --accent-text: #0b0c10;
-      --danger: #ea6273;
-      --danger-soft: #33232a;
-    }
-  }
+  /* Always light — not tied to the OS/browser color scheme. */
   * { box-sizing: border-box; }
   body {
     margin: 0;
@@ -125,13 +111,6 @@
   .badge-completed { background: #eaf0ff; color: #3151d3; }
   .badge-cancelled { background: #fdeef0; color: #c72e42; }
   .badge-archived { background: #f1f2f4; color: #6b7280; }
-  @media (prefers-color-scheme: dark) {
-    .badge-draft, .badge-archived { background: #2a2c33; color: #a7abb5; }
-    .badge-active { background: #163829; color: #4fd694; }
-    .badge-paused { background: #3a2f14; color: #f0b647; }
-    .badge-completed { background: #1c2440; color: #8fa6ff; }
-    .badge-cancelled { background: #3a1e22; color: #f27f8f; }
-  }
   .status-select { font-size: 0.82rem; }
   .row-actions { display: flex; gap: 6px; align-items: center; }
   .row-actions a {

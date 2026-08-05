@@ -6,7 +6,9 @@ const fs = require('fs');
 const path = require('path');
 const pool = require('./lib/db');
 const handlers = require('./lib/handlers');
-const { renderCampaignPage, renderNotFoundPage } = require('./lib/campaign-page');
+const { renderCampaignPage, renderNotFoundPage, TEMPLATES } = require('./lib/campaign-page');
+
+const templateList = Object.entries(TEMPLATES).map(([id, t]) => ({ id, label: t.label, swatch: t.swatch }));
 
 if (!process.env.DATABASE_URL) {
   console.error('DATABASE_URL environment variable is required.');
@@ -50,6 +52,7 @@ function readJsonBody(req) {
 
 const routes = [
   { method: 'GET', pattern: /^\/api\/status$/, handler: () => handlers.getStatus(pool) },
+  { method: 'GET', pattern: /^\/api\/templates$/, handler: () => ({ status: 200, body: templateList }) },
   { method: 'GET', pattern: /^\/api\/brands$/, handler: () => handlers.listBrands(pool) },
   { method: 'POST', pattern: /^\/api\/brands$/, handler: async (req) => handlers.createBrand(pool, await readJsonBody(req)) },
   { method: 'DELETE', pattern: /^\/api\/brands\/(\d+)$/, handler: (_req, [id]) => handlers.deleteBrand(pool, id) },

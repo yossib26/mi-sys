@@ -18,20 +18,7 @@
     --danger-soft: #fdeef0;
     --radius: 16px;
   }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #17181d;
-      --card: #1d1f25;
-      --border: #262830;
-      --border-strong: #313339;
-      --text: #e8e9ec;
-      --muted: #8b8f99;
-      --accent: #7b93f8;
-      --accent-text: #0b0c10;
-      --danger: #ea6273;
-      --danger-soft: #33232a;
-    }
-  }
+  /* Always light — not tied to the OS/browser color scheme. */
   * { box-sizing: border-box; }
   body {
     margin: 0;
@@ -106,7 +93,7 @@
     background: transparent; color: var(--text); transition: background 0.15s ease;
   }
   .upload-label:hover { background: var(--bg); }
-  .actions { display: flex; gap: 10px; justify-content: flex-start; margin-top: 20px; }
+  .actions { display: flex; gap: 10px; justify-content: flex-start; }
   .back-link { display: inline-block; margin-bottom: 4px; font-size: 0.9rem; }
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
@@ -115,6 +102,17 @@
   .empty { color: var(--muted); font-style: italic; }
   .yes { color: #2fa968; font-weight: 600; }
   .no { color: var(--muted); }
+  .template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .template-option {
+    border: 2px solid var(--border-strong); border-radius: 12px; padding: 12px;
+    cursor: pointer; text-align: center; background: var(--bg); transition: border-color 0.15s ease;
+  }
+  .template-option:hover { border-color: var(--muted); }
+  .template-option.selected { border-color: var(--accent); }
+  .template-swatch { display: flex; height: 40px; border-radius: 8px; overflow: hidden; margin-bottom: 8px; border: 1px solid var(--border-strong); }
+  .template-swatch span { flex: 1; }
+  .template-option .label { font-size: 0.85rem; font-weight: 600; }
+  .template-option .default-tag { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 400; margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -165,12 +163,15 @@
           <input id="endDate" type="date" />
         </div>
       </div>
-
-      <div class="actions">
-        <button type="submit">שמור שינויים</button>
-      </div>
-      <p class="msg" id="formMsg"></p>
     </form>
+  </section>
+
+  <section class="card">
+    <h2>עיצוב הדף הציבורי</h2>
+    <div class="template-grid" id="templateGrid">
+      <div class="file-info">טוען…</div>
+    </div>
+    <p class="msg" id="templateMsg"></p>
   </section>
 
   <section class="card">
@@ -180,6 +181,13 @@
     </div>
     <p class="msg" id="bannerMsg"></p>
   </section>
+
+  <div>
+    <div class="actions">
+      <button type="submit" form="campaignForm">שמור שינויים</button>
+    </div>
+    <p class="msg" id="formMsg"></p>
+  </div>
 
   <section class="card">
     <h2>נרשמים</h2>
@@ -321,6 +329,44 @@
     `).join('');
   }
 
+  let selectedTemplate = 'classic';
+  const DEFAULT_TEMPLATE = 'classic';
+
+  async function renderTemplates(currentTemplate) {
+    selectedTemplate = currentTemplate || DEFAULT_TEMPLATE;
+    const grid = document.getElementById('templateGrid');
+    let templates;
+    try {
+      templates = await api('/api/templates');
+    } catch (error) {
+      grid.innerHTML = `<div class="file-info">${escapeHtml(error.message)}</div>`;
+      return;
+    }
+
+    grid.innerHTML = templates.map((t) => `
+      <div class="template-option ${t.id === selectedTemplate ? 'selected' : ''}" data-template="${t.id}">
+        <div class="template-swatch">
+          ${t.swatch.map((c) => `<span style="background:${c}"></span>`).join('')}
+        </div>
+        <span class="label">${escapeHtml(t.label)}${t.id === DEFAULT_TEMPLATE ? '<span class="default-tag">ברירת מחדל</span>' : ''}</span>
+      </div>
+    `).join('');
+
+    grid.querySelectorAll('.template-option').forEach((el) => {
+      el.addEventListener('click', async () => {
+        const templateId = el.getAttribute('data-template');
+        if (templateId === selectedTemplate) return;
+        try {
+          await api(`/api/campaigns/${id}`, { method: 'PUT', body: JSON.stringify({ template: templateId }) });
+          showMsg('templateMsg', 'העיצוב עודכן', 'success');
+          await renderTemplates(templateId);
+        } catch (error) {
+          showMsg('templateMsg', error.message, 'error');
+        }
+      });
+    });
+  }
+
   async function reload() {
     const campaign = await api(`/api/campaigns/${id}`);
     document.getElementById('pageTitle').textContent = `עריכת קמפיין: ${campaign.name}`;
@@ -333,6 +379,7 @@
     document.getElementById('startDate').value = campaign.start_date || '';
     document.getElementById('endDate').value = campaign.end_date || '';
     renderBanner(campaign);
+    await renderTemplates(campaign.template);
     return campaign;
   }
 
