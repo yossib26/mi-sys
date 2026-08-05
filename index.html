@@ -231,6 +231,7 @@
   const ICON_EDIT = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
   const ICON_DUPLICATE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
   const ICON_ARCHIVE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8"/><path d="M10 13h4"/></svg>';
+  const ICON_PREVIEW = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>';
 
   async function initAuth() {
     const res = await fetch('/api/auth/me');
@@ -415,7 +416,7 @@
         <td>${c.registrations_count ?? 0}</td>
         <td>
           ${c.slug && c.brand_slug ? `
-            <a href="/c/${encodeURIComponent(c.brand_slug)}/${encodeURIComponent(c.slug)}" target="_blank" rel="noopener">פתח ↗</a>
+            <a class="icon-btn" href="/c/${encodeURIComponent(c.brand_slug)}/${encodeURIComponent(c.slug)}" target="_blank" rel="noopener" title="תצוגה מקדימה">${ICON_PREVIEW}</a>
           ` : '-'}
         </td>
         <td class="row-actions">
