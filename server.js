@@ -14,6 +14,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 const indexHtml = fs.readFileSync(path.join(__dirname, 'index.html'));
+const editHtml = fs.readFileSync(path.join(__dirname, 'edit.html'));
 
 function sendJson(res, status, body) {
   if (body === null) {
@@ -59,6 +60,8 @@ const routes = [
   { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)$/, handler: (_req, [id]) => handlers.deleteCampaign(pool, id) },
   { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/banner$/, handler: async (req, [id]) => handlers.setCampaignBanner(pool, id, await readJsonBody(req)) },
   { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/banner$/, handler: (_req, [id]) => handlers.deleteCampaignBanner(pool, id) },
+  { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/registrations$/, handler: (_req, [id]) => handlers.listRegistrations(pool, id) },
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/registrations$/, handler: async (req, [id]) => handlers.createRegistration(pool, id, await readJsonBody(req)) },
 ];
 
 const server = http.createServer(async (req, res) => {
@@ -68,6 +71,12 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(indexHtml);
+      return;
+    }
+
+    if (req.method === 'GET' && url.pathname === '/edit.html') {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(editHtml);
       return;
     }
 
@@ -89,6 +98,21 @@ const server = http.createServer(async (req, res) => {
       try {
         const { mime, buffer } = await handlers.getCampaignBanner(pool, bannerMatch[1]);
         res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=3600' });
+        res.end(buffer);
+      } catch (error) {
+        sendJson(res, error.statusCode || 500, { error: error.message });
+      }
+      return;
+    }
+
+    const invoiceMatch = req.method === 'GET' && url.pathname.match(/^\/api\/registrations\/(\d+)\/invoice$/);
+    if (invoiceMatch) {
+      try {
+        const { mime, buffer, filename } = await handlers.getRegistrationInvoice(pool, invoiceMatch[1]);
+        res.writeHead(200, {
+          'Content-Type': mime,
+          'Content-Disposition': `inline; filename="${(filename || 'invoice').replace(/"/g, '')}"`,
+        });
         res.end(buffer);
       } catch (error) {
         sendJson(res, error.statusCode || 500, { error: error.message });

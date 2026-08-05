@@ -33,6 +33,35 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_campaigns_slug ON campaigns (slug) WHERE s
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS banner BYTEA;
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS banner_mime TEXT;
 
+-- Superseded by the registrations table below: contact info + invoice
+-- are per-registrant (many per campaign), not a single field on the
+-- campaign itself.
+ALTER TABLE campaigns DROP COLUMN IF EXISTS contact_first_name;
+ALTER TABLE campaigns DROP COLUMN IF EXISTS contact_last_name;
+ALTER TABLE campaigns DROP COLUMN IF EXISTS contact_email;
+ALTER TABLE campaigns DROP COLUMN IF EXISTS marketing_consent;
+ALTER TABLE campaigns DROP COLUMN IF EXISTS invoice;
+ALTER TABLE campaigns DROP COLUMN IF EXISTS invoice_mime;
+ALTER TABLE campaigns DROP COLUMN IF EXISTS invoice_filename;
+
+-- Self-service registrations submitted by visitors on the public
+-- campaign page (/c/:slug): name, proof-of-purchase invoice, and
+-- marketing consent. Many per campaign.
+CREATE TABLE IF NOT EXISTS registrations (
+  id SERIAL PRIMARY KEY,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  email TEXT,
+  marketing_consent BOOLEAN NOT NULL DEFAULT false,
+  invoice BYTEA NOT NULL,
+  invoice_mime TEXT NOT NULL,
+  invoice_filename TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_registrations_campaign_id ON registrations (campaign_id);
+
 -- Keep updated_at current on every campaign update
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$

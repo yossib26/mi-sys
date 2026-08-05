@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>עריכת קמפיין</title>
+<style>
+  :root {
+    --bg: #f4f4f6;
+    --card: #ffffff;
+    --border: #e0e0e6;
+    --text: #1f2126;
+    --muted: #6b6f7a;
+    --accent: #3355ee;
+    --accent-text: #ffffff;
+    --danger: #d64545;
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16171c;
+      --card: #202228;
+      --border: #34363f;
+      --text: #ecedf0;
+      --muted: #9296a3;
+      --accent: #5b7cfa;
+      --accent-text: #0b0c10;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px;
+  }
+  a { color: var(--accent); }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  p.subtitle { color: var(--muted); margin: 0 0 20px; }
+  main { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+  }
+  section.card h2 { margin: 0 0 16px; font-size: 1.05rem; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field.wide { grid-column: 1 / -1; }
+  .field label { font-size: 0.8rem; color: var(--muted); }
+  input, select, textarea {
+    font: inherit;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    min-width: 0;
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  button {
+    font: inherit;
+    padding: 9px 18px;
+    border: none;
+    border-radius: 6px;
+    background: var(--accent);
+    color: var(--accent-text);
+    cursor: pointer;
+  }
+  button:hover { filter: brightness(1.08); }
+  button.ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+  button.danger { background: var(--danger); color: #fff; }
+  .msg { font-size: 0.85rem; margin: 10px 0 0; min-height: 1.1em; }
+  .msg.error { color: var(--danger); }
+  .msg.success { color: #2e9e5b; }
+  .file-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .banner-preview { max-width: 100%; max-height: 160px; border-radius: 8px; border: 1px solid var(--border); display: block; }
+  .file-info { font-size: 0.85rem; color: var(--muted); }
+  .upload-label {
+    display: inline-block; padding: 7px 14px; font-size: 0.85rem;
+    border: 1px solid var(--border); border-radius: 6px; cursor: pointer;
+    background: transparent; color: var(--text);
+  }
+  .upload-label:hover { filter: brightness(1.08); }
+  .actions { display: flex; gap: 10px; justify-content: flex-start; }
+  .back-link { display: inline-block; margin-bottom: 4px; font-size: 0.9rem; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: right; padding: 7px 6px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 0.78rem; }
+  .empty { color: var(--muted); font-style: italic; }
+  .yes { color: #2e9e5b; font-weight: 600; }
+  .no { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <div>
+    <a class="back-link" href="/">← חזרה לרשימת הקמפיינים</a>
+    <h1 id="pageTitle">עריכת קמפיין</h1>
+    <p class="subtitle" id="pageSubtitle"></p>
+  </div>
+
+  <section class="card">
+    <h2>פרטי קמפיין</h2>
+    <form id="campaignForm">
+      <div class="grid">
+        <div class="field">
+          <label for="brandId">מותג</label>
+          <select id="brandId" required></select>
+        </div>
+        <div class="field">
+          <label for="name">שם קמפיין</label>
+          <input id="name" required />
+        </div>
+        <div class="field wide">
+          <label for="description">תיאור</label>
+          <textarea id="description"></textarea>
+        </div>
+        <div class="field">
+          <label for="budget">תקציב</label>
+          <input id="budget" type="number" step="0.01" min="0" />
+        </div>
+        <div class="field">
+          <label for="status">סטטוס</label>
+          <select id="status">
+            <option value="draft">טיוטה</option>
+            <option value="active">פעיל</option>
+            <option value="paused">מושהה</option>
+            <option value="completed">הושלם</option>
+            <option value="cancelled">בוטל</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="startDate">תאריך התחלה</label>
+          <input id="startDate" type="date" />
+        </div>
+        <div class="field">
+          <label for="endDate">תאריך סיום</label>
+          <input id="endDate" type="date" />
+        </div>
+      </div>
+
+      <div class="actions" style="margin-top: 20px;">
+        <button type="submit">שמור שינויים</button>
+      </div>
+      <p class="msg" id="formMsg"></p>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>באנר שיווקי</h2>
+    <div class="file-row" id="bannerRow">
+      <span class="file-info">טוען…</span>
+    </div>
+    <p class="msg" id="bannerMsg"></p>
+  </section>
+
+  <section class="card">
+    <h2>נרשמים</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>שם</th>
+            <th>אימייל</th>
+            <th>אישור שיווקי</th>
+            <th>תאריך הרשמה</th>
+            <th>חשבונית</th>
+          </tr>
+        </thead>
+        <tbody id="registrationRows">
+          <tr><td colspan="5" class="empty">טוען…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) {
+    document.body.innerHTML = '<main><p>חסר מזהה קמפיין (id) בכתובת.</p></main>';
+    throw new Error('missing id');
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
+  function showMsg(elId, text, kind) {
+    const node = document.getElementById(elId);
+    node.textContent = text || '';
+    node.className = 'msg' + (kind ? ' ' + kind : '');
+  }
+
+  async function api(path, options) {
+    const res = await fetch(path, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', ...(options && options.headers) },
+    });
+    let data = null;
+    if (res.status !== 204) data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error((data && data.error) || `שגיאה (${res.status})`);
+    return data;
+  }
+
+  function fileToDataUri(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('קריאת הקובץ נכשלה'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function loadBrandOptions(selectedId) {
+    const brands = await api('/api/brands');
+    const select = document.getElementById('brandId');
+    select.innerHTML = brands.map((b) => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+    select.value = selectedId;
+  }
+
+  function renderBanner(campaign) {
+    const row = document.getElementById('bannerRow');
+    row.innerHTML = `
+      ${campaign.has_banner ? `
+        <img class="banner-preview" src="/api/campaigns/${campaign.id}/banner" alt="" />
+        <button class="ghost danger" id="removeBanner">הסר באנר</button>
+      ` : '<span class="file-info">אין באנר עדיין.</span>'}
+      <label class="upload-label">
+        ${campaign.has_banner ? 'החלף באנר' : 'העלה באנר'}
+        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" id="bannerInput" hidden />
+      </label>
+    `;
+
+    document.getElementById('bannerInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const MAX = 2 * 1024 * 1024;
+      if (file.size > MAX) {
+        showMsg('bannerMsg', 'הקובץ גדול מדי (מקסימום 2MB)', 'error');
+        e.target.value = '';
+        return;
+      }
+      try {
+        const dataUri = await fileToDataUri(file);
+        await api(`/api/campaigns/${id}/banner`, { method: 'PUT', body: JSON.stringify({ image: dataUri }) });
+        showMsg('bannerMsg', 'הבאנר עודכן', 'success');
+        await reload();
+      } catch (error) {
+        showMsg('bannerMsg', error.message, 'error');
+      }
+    });
+
+    const removeBtn = document.getElementById('removeBanner');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', async () => {
+        if (!confirm('להסיר את הבאנר?')) return;
+        try {
+          await api(`/api/campaigns/${id}/banner`, { method: 'DELETE' });
+          showMsg('bannerMsg', '');
+          await reload();
+        } catch (error) {
+          showMsg('bannerMsg', error.message, 'error');
+        }
+      });
+    }
+  }
+
+  async function loadRegistrations() {
+    const rowsEl = document.getElementById('registrationRows');
+    let registrations;
+    try {
+      registrations = await api(`/api/campaigns/${id}/registrations`);
+    } catch (error) {
+      rowsEl.innerHTML = `<tr><td colspan="5" class="empty">${escapeHtml(error.message)}</td></tr>`;
+      return;
+    }
+
+    if (registrations.length === 0) {
+      rowsEl.innerHTML = '<tr><td colspan="5" class="empty">עדיין אין נרשמים.</td></tr>';
+      return;
+    }
+
+    rowsEl.innerHTML = registrations.map((r) => `
+      <tr>
+        <td>${escapeHtml(r.first_name)} ${escapeHtml(r.last_name)}</td>
+        <td>${escapeHtml(r.email) || '-'}</td>
+        <td>${r.marketing_consent ? '<span class="yes">כן</span>' : '<span class="no">לא</span>'}</td>
+        <td>${new Date(r.created_at).toLocaleDateString('he-IL')}</td>
+        <td><a href="/api/registrations/${r.id}/invoice" target="_blank" rel="noopener">📄 ${escapeHtml(r.invoice_filename) || 'צפה'}</a></td>
+      </tr>
+    `).join('');
+  }
+
+  async function reload() {
+    const campaign = await api(`/api/campaigns/${id}`);
+    document.getElementById('pageTitle').textContent = `עריכת קמפיין: ${campaign.name}`;
+    document.getElementById('pageSubtitle').textContent = campaign.brand_name;
+    await loadBrandOptions(campaign.brand_id);
+    document.getElementById('name').value = campaign.name || '';
+    document.getElementById('description').value = campaign.description || '';
+    document.getElementById('budget').value = campaign.budget ?? '';
+    document.getElementById('status').value = campaign.status;
+    document.getElementById('startDate').value = campaign.start_date || '';
+    document.getElementById('endDate').value = campaign.end_date || '';
+    renderBanner(campaign);
+    return campaign;
+  }
+
+  document.getElementById('campaignForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = {
+      brand_id: Number(document.getElementById('brandId').value),
+      name: document.getElementById('name').value.trim(),
+      description: document.getElementById('description').value.trim() || null,
+      budget: document.getElementById('budget').value ? Number(document.getElementById('budget').value) : null,
+      status: document.getElementById('status').value,
+      start_date: document.getElementById('startDate').value || null,
+      end_date: document.getElementById('endDate').value || null,
+    };
+    try {
+      await api(`/api/campaigns/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+      showMsg('formMsg', 'נשמר בהצלחה', 'success');
+    } catch (error) {
+      showMsg('formMsg', error.message, 'error');
+    }
+  });
+
+  Promise.all([reload(), loadRegistrations()]).catch((error) => {
+    document.body.innerHTML = `<main><p>שגיאה בטעינת הקמפיין: ${escapeHtml(error.message)}</p></main>`;
+  });
+</script>
+</body>
+</html>
