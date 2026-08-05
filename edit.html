@@ -6,32 +6,30 @@
 <title>עריכת קמפיין</title>
 <style>
   :root {
-    --bg: #f8f9fb;
+    --bg: #fbfbfc;
     --card: #ffffff;
-    --border: #edeef2;
-    --border-strong: #e2e4ea;
-    --text: #24262d;
-    --muted: #8a8f9c;
+    --border: #f0f1f4;
+    --border-strong: #e6e7eb;
+    --text: #2c2e33;
+    --muted: #9a9ea8;
     --accent: #4361ee;
     --accent-text: #ffffff;
     --danger: #e0455a;
-    --danger-soft: #fdeced;
+    --danger-soft: #fdeef0;
     --radius: 16px;
-    --shadow: 0 1px 2px rgba(20, 24, 40, 0.04), 0 2px 8px rgba(20, 24, 40, 0.04);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #16171c;
-      --card: #1e2026;
-      --border: #2a2c34;
-      --border-strong: #34363f;
-      --text: #edeef1;
-      --muted: #9296a3;
-      --accent: #6d87f7;
+      --bg: #17181d;
+      --card: #1d1f25;
+      --border: #262830;
+      --border-strong: #313339;
+      --text: #e8e9ec;
+      --muted: #8b8f99;
+      --accent: #7b93f8;
       --accent-text: #0b0c10;
       --danger: #ea6273;
-      --danger-soft: #3a2228;
-      --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 14px rgba(0, 0, 0, 0.22);
+      --danger-soft: #33232a;
     }
   }
   * { box-sizing: border-box; }
@@ -40,18 +38,17 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
-    padding: 36px 24px;
+    padding: 40px 24px;
     -webkit-font-smoothing: antialiased;
   }
   a { color: var(--accent); }
-  h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
-  p.subtitle { color: var(--muted); margin: 0 0 24px; font-size: 0.92rem; }
-  main { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+  h1 { font-size: 1.4rem; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
+  p.subtitle { color: var(--muted); margin: 0 0 24px; font-size: 0.9rem; }
+  main { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
   section.card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    box-shadow: var(--shadow);
     padding: 24px 26px;
   }
   section.card h2 { margin: 0 0 18px; font-size: 1.05rem; font-weight: 600; }
