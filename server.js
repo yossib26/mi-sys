@@ -105,6 +105,7 @@ const routes = [
   { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/banner$/, auth: 'user', handler: (_req, [id]) => handlers.deleteCampaignBanner(pool, id) },
   { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/registrations$/, auth: 'user', handler: (_req, [id]) => handlers.listRegistrations(pool, id) },
   { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/registrations$/, handler: async (req, [id]) => handlers.createRegistration(pool, id, await readJsonBody(req)) },
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/form-start$/, handler: (_req, [id]) => handlers.recordCampaignFormStart(pool, id) },
 ];
 
 const server = http.createServer(async (req, res) => {

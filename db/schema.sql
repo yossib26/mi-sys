@@ -58,6 +58,12 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_campaigns_slug ON campaigns (slug) WHERE s
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS banner BYTEA;
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS banner_mime TEXT;
 
+-- Public-page funnel counters. "Completed" isn't stored here — it's
+-- COUNT(registrations) for the campaign, computed on read, so it can
+-- never drift out of sync with the actual rows.
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS views_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS form_starts_count INTEGER NOT NULL DEFAULT 0;
+
 -- Visual template for the public /c/:slug page — one of a fixed set
 -- defined in lib/campaign-page.js. 'classic' is the default for new
 -- campaigns and for any pre-existing row.
