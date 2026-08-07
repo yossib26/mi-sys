@@ -76,10 +76,22 @@ ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS form_starts_count INTEGER NOT NUL
 -- Visual template for the public /c/:slug page — one of a fixed set
 -- defined in lib/campaign-page.js. 'classic' is the default for new
 -- campaigns and for any pre-existing row.
+--
+-- One consolidated DROP+ADD with every value ever added, not a fresh
+-- narrower pair per addition — a narrower intermediate constraint
+-- re-executing here would reject rows that already use a value added
+-- after it (hit this exact bug earlier with campaign_fields_type_check
+-- and campaigns_gift_mode_check).
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS template TEXT NOT NULL DEFAULT 'classic';
+
+-- 'bold' and 'minimal' were removed as selectable templates — reassign
+-- any campaign still using either to the default 'classic' before the
+-- constraint below stops allowing them (a no-op once no rows match).
+UPDATE campaigns SET template = 'classic' WHERE template IN ('bold', 'minimal');
+
 ALTER TABLE campaigns DROP CONSTRAINT IF EXISTS campaigns_template_check;
 ALTER TABLE campaigns ADD CONSTRAINT campaigns_template_check
-  CHECK (template IN ('classic', 'bold', 'minimal'));
+  CHECK (template IN ('classic', 'dark'));
 
 -- Superseded by the registrations table below: contact info + invoice
 -- are per-registrant (many per campaign), not a single field on the
@@ -346,3 +358,46 @@ CREATE TABLE IF NOT EXISTS campaign_activity_log (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_campaign_activity_log_campaign_id ON campaign_activity_log (campaign_id, created_at DESC);
+
+-- General footer note — a summarized standard promotional-terms
+-- notice (validity dates, stock/unit limits, no combining with other
+-- offers, exclusions, cancellation per consumer-protection law, and
+-- the company's right to change/end the promotion) shown at the
+-- bottom of every campaign's public page, next to the brand's logo —
+-- see renderCampaignPage in lib/campaign-page.js. NOT NULL DEFAULT
+-- backfills every pre-existing campaign with the same text (Postgres
+-- applies a column default to existing rows without a full table
+-- rewrite); editable per campaign afterwards from edit.html, same as
+-- any other campaign detail — this is a starting value, not a
+-- fixed/shared global.
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS footer_note TEXT NOT NULL DEFAULT
+  'המבצע בתוקף בין התאריכים שצוינו בעמוד זה בלבד, בכפוף למלאי הקיים ולהגבלת יחידות ללקוח ככל שנקבעה. לא ניתן לשלב את ההטבה עם הנחות, קופונים או הטבות מועדון נוספות, אלא אם צוין אחרת. המבצע אינו כולל פריטים, קטגוריות או סניפים שהוחרגו במפורש. ביטול והחזרת מוצרים שנרכשו במסגרת המבצע כפופים להוראות חוק הגנת הצרכן. החברה שומרת לעצמה את הזכות לשנות את תנאי המבצע או להפסיקו בכל עת וללא הודעה מוקדמת.';
+
+-- Brand logo, shown at 60x60 next to the footer note above on every
+-- one of that brand's public campaign pages. Same BYTEA+mime shape as
+-- a campaign banner (see campaigns.banner) — excluded from ordinary
+-- brand list/get responses (has_logo rides along instead, see
+-- BRAND_COLUMNS in lib/handlers.js), served from its own route.
+ALTER TABLE brands ADD COLUMN IF NOT EXISTS logo BYTEA;
+ALTER TABLE brands ADD COLUMN IF NOT EXISTS logo_mime TEXT;
+
+-- Explicit opt-in/opt-out for ActiveTrail sync, next to the token/
+-- group/email-field settings in edit.html — see
+-- maybeSyncRegistrationToActiveTrail in lib/handlers.js, which now
+-- checks this before syncing, instead of inferring "on" purely from
+-- whether a token happens to be set. Wrapped in a one-time DO block
+-- (not a bare UPDATE that would run on every migrate.js execution):
+-- campaigns that already had a working integration configured keep
+-- syncing the first time this column appears, but that backfill must
+-- never re-run afterwards — otherwise it would silently re-enable
+-- sync for a campaign an admin later, deliberately, turned back off.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'campaigns' AND column_name = 'activetrail_sync_enabled'
+  ) THEN
+    ALTER TABLE campaigns ADD COLUMN activetrail_sync_enabled BOOLEAN NOT NULL DEFAULT false;
+    UPDATE campaigns SET activetrail_sync_enabled = true WHERE activetrail_token IS NOT NULL;
+  END IF;
+END $$;

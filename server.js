@@ -96,6 +96,8 @@ const routes = [
   { method: 'POST', pattern: /^\/api\/brands$/, auth: 'admin', handler: async (req) => handlers.createBrand(pool, await readJsonBody(req)) },
   { method: 'PUT', pattern: /^\/api\/brands\/(\d+)$/, auth: 'admin', handler: async (req, [id]) => handlers.updateBrand(pool, id, await readJsonBody(req)) },
   { method: 'DELETE', pattern: /^\/api\/brands\/(\d+)$/, auth: 'admin', handler: (_req, [id]) => handlers.deleteBrand(pool, id) },
+  { method: 'PUT', pattern: /^\/api\/brands\/(\d+)\/logo$/, auth: 'admin', handler: async (req, [id]) => handlers.setBrandLogo(pool, id, await readJsonBody(req)) },
+  { method: 'DELETE', pattern: /^\/api\/brands\/(\d+)\/logo$/, auth: 'admin', handler: (_req, [id]) => handlers.deleteBrandLogo(pool, id) },
 
   { method: 'GET', pattern: /^\/api\/campaigns$/, auth: 'user', handler: async (_req, _m, query, user) => handlers.listCampaigns(pool, query, await users.getBrandScope(pool, user)) },
   { method: 'POST', pattern: /^\/api\/campaigns$/, auth: 'user', handler: async (req, _m, _q, user) => handlers.createCampaign(pool, await readJsonBody(req), await users.getBrandScope(pool, user)) },
@@ -205,6 +207,20 @@ const server = http.createServer(async (req, res) => {
     if (productImageMatch) {
       try {
         const { mime, buffer } = await handlers.getCampaignProductImage(pool, productImageMatch[1]);
+        res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=3600' });
+        res.end(buffer);
+      } catch (error) {
+        sendJson(res, error.statusCode || 500, { error: error.message });
+      }
+      return;
+    }
+
+    // Public — the brand logo renders next to the footer note on the
+    // unauthenticated public campaign page, same reasoning as the banner.
+    const brandLogoMatch = req.method === 'GET' && url.pathname.match(/^\/api\/brands\/(\d+)\/logo$/);
+    if (brandLogoMatch) {
+      try {
+        const { mime, buffer } = await handlers.getBrandLogo(pool, brandLogoMatch[1]);
         res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=3600' });
         res.end(buffer);
       } catch (error) {

@@ -63,7 +63,11 @@
     padding: 24px 26px;
   }
   section.card h2 { margin: 0 0 18px; font-size: 1rem; font-weight: 600; color: var(--navy); }
+  .section-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .section-header h2 { margin: 0; }
+  form#campaignForm .actions { display: flex; gap: 8px; align-items: center; }
   form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 18px; }
+  form[hidden] { display: none; }
   .field { display: flex; flex-direction: column; gap: 5px; }
   .field label { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
   input, select, textarea {
@@ -179,9 +183,12 @@
   </div>
 
   <section class="card">
-    <h2>קמפיינים</h2>
+    <div class="section-header">
+      <h2>קמפיינים</h2>
+      <button type="button" id="toggleCampaignFormBtn">+ צור קמפיין</button>
+    </div>
     <p class="msg" id="campaignMsg"></p>
-    <form id="campaignForm">
+    <form id="campaignForm" hidden>
       <div class="field">
         <label for="campaignBrand">מותג</label>
         <select id="campaignBrand" name="brand_id" required></select>
@@ -206,7 +213,10 @@
         <label for="campaignDescription">תיאור</label>
         <input id="campaignDescription" name="description" placeholder="אופציונלי" />
       </div>
-      <button type="submit">הוסף קמפיין</button>
+      <div class="actions">
+        <button type="submit">הוסף קמפיין</button>
+        <button type="button" class="ghost" id="cancelCampaignFormBtn">ביטול</button>
+      </div>
     </form>
 
     <div class="filter-row">
@@ -536,6 +546,23 @@
     `).join('');
   }
 
+  // The "create campaign" fields are hidden by default and only shown
+  // on demand — "+ צור קמפיין" reveals the form, "ביטול" or a
+  // successful save collapses it again.
+  function showCampaignForm() {
+    document.getElementById('campaignForm').hidden = false;
+    document.getElementById('toggleCampaignFormBtn').hidden = true;
+    document.getElementById('campaignName').focus();
+  }
+  function hideCampaignForm() {
+    document.getElementById('campaignForm').hidden = true;
+    document.getElementById('toggleCampaignFormBtn').hidden = false;
+    document.getElementById('campaignForm').reset();
+    showMsg('campaignMsg', '');
+  }
+  document.getElementById('toggleCampaignFormBtn').addEventListener('click', showCampaignForm);
+  document.getElementById('cancelCampaignFormBtn').addEventListener('click', hideCampaignForm);
+
   document.getElementById('campaignForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -553,8 +580,7 @@
     }
     try {
       await api('/api/campaigns', { method: 'POST', body: JSON.stringify(payload) });
-      form.reset();
-      showMsg('campaignMsg', '');
+      hideCampaignForm();
       currentPage = 1;
       await loadCampaigns();
     } catch (error) {

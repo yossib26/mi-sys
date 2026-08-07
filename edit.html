@@ -319,6 +319,15 @@
     <div id="activetrailSection"><p class="file-info">טוען…</p></div>
   </section>
 
+  <section class="card">
+    <h2>הערה כללית בתחתית העמוד</h2>
+    <p class="subtitle">מוצגת בתחתית הדף הציבורי של הקמפיין, ליד לוגו המותג (מנוהל בעמוד ניהול המותגים).</p>
+    <div class="field">
+      <label for="footerNote">טקסט ההערה</label>
+      <textarea id="footerNote" rows="5"></textarea>
+    </div>
+  </section>
+
   <div>
     <div class="actions">
       <button type="submit" form="campaignForm">שמור שינויים</button>
@@ -1505,25 +1514,31 @@
     }
 
     wrap.innerHTML = `
-      <div class="grid">
-        <div class="field">
-          <label for="activetrailToken">טוקן API</label>
-          <input type="password" id="activetrailToken" autocomplete="off"
-            placeholder="${campaign.has_activetrail_token ? '•••••••• (טוקן קיים — השאר ריק כדי לשמור)' : 'הזן טוקן API'}" />
+      <label class="field-required-toggle" style="margin-bottom: 16px;">
+        <input type="checkbox" id="activetrailSyncEnabled" ${campaign.activetrail_sync_enabled ? 'checked' : ''} />
+        בצע סנכרון אוטומטי עם ActiveTrail
+      </label>
+      <div id="activetrailFieldsWrap" style="display: ${campaign.activetrail_sync_enabled ? 'block' : 'none'};">
+        <div class="grid">
+          <div class="field">
+            <label for="activetrailToken">טוקן API</label>
+            <input type="password" id="activetrailToken" autocomplete="off"
+              placeholder="${campaign.has_activetrail_token ? '•••••••• (טוקן קיים — השאר ריק כדי לשמור)' : 'הזן טוקן API'}" />
+          </div>
+          <div class="field">
+            <label for="activetrailGroupId">קוד קבוצה</label>
+            <input type="text" id="activetrailGroupId" value="${escapeHtml(campaign.activetrail_group_id || '')}" placeholder="לדוגמה: 12345" />
+          </div>
+          <div class="field wide">
+            <label for="activetrailEmailField">שדה האימייל לשליחה</label>
+            <select id="activetrailEmailField">
+              <option value="">בחר שדה…</option>
+              ${fields.map((f) => `<option value="${f.id}" ${f.id === campaign.activetrail_email_field_id ? 'selected' : ''}>${escapeHtml(f.label)} (${FIELD_TYPE_LABELS[f.type] || f.type})</option>`).join('')}
+            </select>
+          </div>
         </div>
-        <div class="field">
-          <label for="activetrailGroupId">קוד קבוצה</label>
-          <input type="text" id="activetrailGroupId" value="${escapeHtml(campaign.activetrail_group_id || '')}" placeholder="לדוגמה: 12345" />
-        </div>
-        <div class="field wide">
-          <label for="activetrailEmailField">שדה האימייל לשליחה</label>
-          <select id="activetrailEmailField">
-            <option value="">בחר שדה…</option>
-            ${fields.map((f) => `<option value="${f.id}" ${f.id === campaign.activetrail_email_field_id ? 'selected' : ''}>${escapeHtml(f.label)} (${FIELD_TYPE_LABELS[f.type] || f.type})</option>`).join('')}
-          </select>
-        </div>
+        ${campaign.has_activetrail_token ? '<button type="button" class="ghost danger" id="clearActivetrailToken" style="margin-top:10px;">הסר טוקן</button>' : ''}
       </div>
-      ${campaign.has_activetrail_token ? '<button type="button" class="ghost danger" id="clearActivetrailToken" style="margin-top:10px;">הסר טוקן</button>' : ''}
       <p class="msg" id="activetrailMsg"></p>
     `;
 
@@ -1546,6 +1561,14 @@
       }
     }
 
+    document.getElementById('activetrailSyncEnabled').addEventListener('change', (e) => {
+      // Toggling the checkbox itself always saves right away (even
+      // though it flips the fields' visibility, which also touches the
+      // DOM this handler is attached to — save() below re-renders the
+      // whole section from the server's response, so that's fine).
+      document.getElementById('activetrailFieldsWrap').style.display = e.target.checked ? 'block' : 'none';
+      save({ activetrail_sync_enabled: e.target.checked });
+    });
     document.getElementById('activetrailToken').addEventListener('change', () => save());
     document.getElementById('activetrailGroupId').addEventListener('change', () => save());
     document.getElementById('activetrailEmailField').addEventListener('change', () => save());
@@ -1590,6 +1613,7 @@
     document.getElementById('status').value = campaign.status;
     document.getElementById('startDate').value = campaign.start_date || '';
     document.getElementById('endDate').value = campaign.end_date || '';
+    document.getElementById('footerNote').value = campaign.footer_note || '';
     renderBanner(campaign);
     await renderTemplates(campaign.template);
     document.getElementById('giftMode').value = campaign.gift_mode || 'none';
@@ -1611,6 +1635,10 @@
       status: document.getElementById('status').value,
       start_date: document.getElementById('startDate').value || null,
       end_date: document.getElementById('endDate').value || null,
+      // Unlike description/dates above, this column is NOT NULL (it
+      // has a default summarized-terms value) — an empty textarea
+      // just means "no footer note", sent as '', never null.
+      footer_note: document.getElementById('footerNote').value.trim(),
     };
     try {
       await api(`/api/campaigns/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
