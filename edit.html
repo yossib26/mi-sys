@@ -6,17 +6,22 @@
 <title>עריכת קמפיין</title>
 <style>
   :root {
-    --bg: #fbfbfc;
+    --navy: #33475b;
+    --bg: #f5f8fa;
     --card: #ffffff;
-    --border: #f0f1f4;
-    --border-strong: #e6e7eb;
-    --text: #2c2e33;
-    --muted: #9a9ea8;
-    --accent: #4361ee;
+    --border: #e5e8ec;
+    --border-strong: #cbd6e2;
+    --text: #33475b;
+    --muted: #7c98b6;
+    --accent: #0091ae;
+    --accent-soft: #eaf7f8;
+    --brand: #ff7a59;
+    --brand-dark: #e66e50;
     --accent-text: #ffffff;
     --danger: #e0455a;
     --danger-soft: #fdeef0;
-    --radius: 16px;
+    --radius: 4px;
+    --radius-lg: 8px;
   }
   /* Always light — not tied to the OS/browser color scheme. */
   * { box-sizing: border-box; }
@@ -25,20 +30,44 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
-    padding: 40px 24px;
     -webkit-font-smoothing: antialiased;
   }
   a { color: var(--accent); }
-  h1 { font-size: 1.4rem; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
-  p.subtitle { color: var(--muted); margin: 0 0 24px; font-size: 0.9rem; }
-  main { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .topnav {
+    background: var(--navy); color: #fff; display: flex; align-items: center;
+    gap: 20px; padding: 0 24px; height: 56px;
+  }
+  .topnav-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1rem; color: #fff; white-space: nowrap; }
+  .topnav-brand .mark {
+    width: 28px; height: 28px; border-radius: 6px; background: var(--brand);
+    display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; color: #fff;
+  }
+  .topnav-links { display: flex; align-items: center; gap: 2px; flex: 1; }
+  .topnav-links a {
+    color: #cbd6e2; text-decoration: none; font-size: 0.86rem; font-weight: 500;
+    padding: 8px 12px; border-radius: var(--radius); transition: background 0.15s ease, color 0.15s ease;
+  }
+  .topnav-links a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+  .topnav-links a.active { color: #fff; background: rgba(255, 255, 255, 0.14); }
+  .topnav-user { display: flex; align-items: center; gap: 12px; font-size: 0.82rem; color: #cbd6e2; white-space: nowrap; }
+  .topnav-user .topnav-user-name { color: #fff; font-weight: 600; }
+  .topnav-user a { color: #cbd6e2; text-decoration: none; }
+  .topnav-user a:hover { color: #fff; }
+  h1 { font-size: 1.55rem; font-weight: 500; margin: 0 0 4px; letter-spacing: -0.01em; color: var(--navy); }
+  p.subtitle { color: var(--muted); margin: 0; font-size: 0.9rem; }
+  main { max-width: 800px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 20px; }
+  .page-head { padding-bottom: 20px; border-bottom: 1px solid var(--border-strong); margin-bottom: 4px; }
   section.card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     padding: 24px 26px;
   }
-  section.card h2 { margin: 0 0 18px; font-size: 1.05rem; font-weight: 600; }
+  section.card h2 { margin: 0 0 18px; font-size: 1.05rem; font-weight: 600; color: var(--navy); }
+  .section-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .section-header h2 { margin: 0; }
+  .section-header-actions { display: flex; gap: 8px; }
+  .section-header-actions a.ghost { text-decoration: none; display: inline-flex; align-items: center; }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .field { display: flex; flex-direction: column; gap: 5px; }
   .field.wide { grid-column: 1 / -1; }
@@ -47,7 +76,7 @@
     font: inherit;
     padding: 9px 11px;
     border: 1px solid var(--border-strong);
-    border-radius: 10px;
+    border-radius: var(--radius);
     background: var(--bg);
     color: var(--text);
     min-width: 0;
@@ -63,34 +92,34 @@
     font-weight: 600;
     padding: 9px 18px;
     border: none;
-    border-radius: 10px;
-    background: var(--accent);
+    border-radius: var(--radius);
+    background: var(--brand);
     color: var(--accent-text);
     cursor: pointer;
-    transition: filter 0.15s ease;
+    transition: background 0.15s ease;
   }
-  button:hover { filter: brightness(1.06); }
+  button:hover { background: var(--brand-dark); }
   button.ghost {
     background: transparent;
     border: 1px solid var(--border-strong);
-    color: var(--text);
+    color: var(--navy);
     font-weight: 500;
     padding: 6px 12px;
     font-size: 0.85rem;
   }
-  button.ghost:hover { background: var(--bg); filter: none; }
+  button.ghost:hover { background: var(--bg); }
   button.danger { background: var(--danger-soft); color: var(--danger); }
-  button.danger:hover { filter: none; background: var(--danger); color: #fff; }
+  button.danger:hover { background: var(--danger); color: #fff; }
   .msg { font-size: 0.85rem; margin: 10px 0 0; min-height: 1.1em; }
   .msg.error { color: var(--danger); }
   .msg.success { color: #2fa968; }
   .file-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .banner-preview { max-width: 100%; max-height: 160px; border-radius: 10px; border: 1px solid var(--border); display: block; }
+  .banner-preview { max-width: 100%; max-height: 160px; border-radius: var(--radius); border: 1px solid var(--border); display: block; }
   .file-info { font-size: 0.85rem; color: var(--muted); }
   .upload-label {
     display: inline-block; padding: 7px 14px; font-size: 0.85rem; font-weight: 500;
-    border: 1px solid var(--border-strong); border-radius: 10px; cursor: pointer;
-    background: transparent; color: var(--text); transition: background 0.15s ease;
+    border: 1px solid var(--border-strong); border-radius: var(--radius); cursor: pointer;
+    background: transparent; color: var(--navy); transition: background 0.15s ease;
   }
   .upload-label:hover { background: var(--bg); }
   .actions { display: flex; gap: 10px; justify-content: flex-start; }
@@ -98,36 +127,84 @@
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
   th, td { text-align: right; padding: 10px 8px; border-bottom: 1px solid var(--border); }
-  th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  th { background: var(--bg); color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  tbody tr:hover { background: var(--accent-soft); }
   .empty { color: var(--muted); font-style: italic; }
   .yes { color: #2fa968; font-weight: 600; }
   .no { color: var(--muted); }
   .template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
   .template-option {
-    border: 2px solid var(--border-strong); border-radius: 12px; padding: 12px;
+    border: 2px solid var(--border-strong); border-radius: var(--radius-lg); padding: 12px;
     cursor: pointer; text-align: center; background: var(--bg); transition: border-color 0.15s ease;
   }
   .template-option:hover { border-color: var(--muted); }
   .template-option.selected { border-color: var(--accent); }
-  .template-swatch { display: flex; height: 40px; border-radius: 8px; overflow: hidden; margin-bottom: 8px; border: 1px solid var(--border-strong); }
+  .template-swatch { display: flex; height: 40px; border-radius: var(--radius); overflow: hidden; margin-bottom: 8px; border: 1px solid var(--border-strong); }
   .template-swatch span { flex: 1; }
   .template-option .label { font-size: 0.85rem; font-weight: 600; }
   .template-option .default-tag { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 400; margin-top: 2px; }
-  .top-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
-  .user-info { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--muted); }
-  .user-info a { color: var(--text); text-decoration: none; border: 1px solid var(--border-strong); border-radius: 10px; padding: 6px 12px; }
-  .user-info a:hover { background: var(--bg); }
+
+  section.card p.subtitle { margin: -10px 0 16px; }
+  .field-row { border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 12px; }
+  .field-row-main { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .field-row-main .field-label-input { flex: 2; min-width: 140px; }
+  .field-row-main .field-type-select { flex: 1; min-width: 130px; }
+  .field-required-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; white-space: nowrap; }
+  .field-required-toggle input { width: auto; }
+  .field-row-actions { display: flex; gap: 6px; margin-inline-start: auto; }
+  .field-row-extra { margin-top: 12px; }
+  .field-row-extra label { font-size: 0.8rem; color: var(--muted); font-weight: 500; display: block; margin-bottom: 5px; }
+  .field-hint { font-size: 0.78rem; color: var(--muted); margin: 10px 0 0; }
+  .editor-toolbar { display: flex; gap: 8px; margin-bottom: 6px; }
+  .editor-toolbar button { padding: 5px 10px; font-size: 0.8rem; }
+  .link-popover {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 10px;
+    margin-bottom: 8px; background: var(--bg);
+  }
+  .link-popover[hidden] { display: none; }
+  .link-popover input[type="text"], .link-popover input[type="url"] { flex: 1; min-width: 140px; }
+  .link-popover-checkbox { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; white-space: nowrap; }
+  .link-popover-checkbox input { width: auto; }
+  .link-popover-actions { display: flex; gap: 6px; }
+  .link-popover-actions button { padding: 6px 12px; font-size: 0.85rem; }
+  .description-preview { font-size: 0.8rem; color: var(--muted); margin: 6px 0 0; line-height: 1.5; min-height: 1.1em; }
+  .description-preview a { color: var(--accent); }
+  .field-row-fixed { background: var(--bg); }
+  .field-row-fixed .field-label-input { flex: 1; min-width: 220px; }
+  .gift-sku-input { max-width: 130px; flex: 0 0 auto !important; }
+  .gift-image-row { margin-top: 10px; }
+  .gift-image-row .banner-preview { max-height: 80px; }
+  .nested-gifts { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border-strong); }
+  .nested-gifts .field-hint { margin-bottom: 8px; }
+  .nested-gift-row { border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; background: var(--card); }
+  .field-fixed-badge {
+    font-size: 0.72rem; font-weight: 600; color: var(--muted); white-space: nowrap;
+    border: 1px solid var(--border-strong); border-radius: 999px; padding: 4px 10px;
+  }
+  .icon-btn {
+    width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--border-strong); border-radius: var(--radius); background: transparent; color: var(--navy);
+    cursor: pointer; padding: 0; font-size: 0.9rem; line-height: 1;
+  }
+  .icon-btn:hover { background: var(--bg); }
+  .icon-btn.danger:hover { background: var(--danger-soft); color: var(--danger); border-color: var(--danger-soft); }
+  .icon-btn:disabled { opacity: 0.3; cursor: default; }
+  .icon-btn:disabled:hover { background: transparent; }
+  .fields-empty { color: var(--muted); font-style: italic; font-size: 0.9rem; margin: 0; }
 </style>
 </head>
 <body>
+<header class="topnav">
+  <div class="topnav-brand"><span class="mark">MS</span> מערכת קמפיינים</div>
+  <nav class="topnav-links" id="topnavLinks"></nav>
+  <div class="topnav-user" id="userInfo"></div>
+</header>
 <main>
-  <div class="top-bar">
-    <div>
-      <a class="back-link" href="/">← חזרה לרשימת הקמפיינים</a>
-      <h1 id="pageTitle">עריכת קמפיין</h1>
-      <p class="subtitle" id="pageSubtitle"></p>
-    </div>
-    <div class="user-info" id="userInfo"></div>
+  <div class="page-head">
+    <a class="back-link" href="/">← חזרה לרשימת הקמפיינים</a>
+    <h1 id="pageTitle">עריכת קמפיין</h1>
+    <p class="subtitle" id="pageSubtitle"></p>
   </div>
 
   <section class="card">
@@ -143,8 +220,29 @@
           <input id="name" required />
         </div>
         <div class="field wide">
+          <label for="slug">כתובת URL</label>
+          <input id="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" maxlength="80"
+            title="אותיות אנגליות קטנות, ספרות ומקפים בלבד (בלי מקף בהתחלה/בסוף)" />
+          <p class="field-hint" id="slugPreview"></p>
+        </div>
+        <div class="field wide">
           <label for="description">תיאור</label>
+          <div class="editor-toolbar">
+            <button type="button" class="ghost" id="insertLinkBtn">🔗 הוסף קישור</button>
+          </div>
+          <div class="link-popover" id="linkPopover" hidden>
+            <input type="text" id="linkTextInput" placeholder="טקסט הקישור" />
+            <input type="url" id="linkUrlInput" placeholder="https://example.com" />
+            <label class="link-popover-checkbox">
+              <input type="checkbox" id="linkNewTabInput" checked /> פתח בחלון חדש
+            </label>
+            <div class="link-popover-actions">
+              <button type="button" id="linkPopoverConfirm">הוסף</button>
+              <button type="button" class="ghost" id="linkPopoverCancel">ביטול</button>
+            </div>
+          </div>
           <textarea id="description"></textarea>
+          <p class="description-preview" id="descriptionPreview"></p>
         </div>
         <div class="field">
           <label for="budget">תקציב</label>
@@ -189,6 +287,38 @@
     <p class="msg" id="bannerMsg"></p>
   </section>
 
+  <section class="card">
+    <h2>שדות מותאמים אישית לטופס ההרשמה</h2>
+    <p class="subtitle">שדות שיוצגו בטופס ההרשמה הציבורי של הקמפיין.</p>
+    <div id="fieldsList"><p class="fields-empty">טוען…</p></div>
+    <button type="button" class="ghost" id="addFieldBtn">+ הוסף שדה</button>
+    <div id="fixedFieldsList"></div>
+    <p class="msg" id="fieldsMsg"></p>
+  </section>
+
+  <section class="card">
+    <h2>מתנה לבחירה</h2>
+    <p class="subtitle">אפשר לנרשם לבחור מתנה, ואופציונלית גם את המוצר שרכש, בנוסף לשדות הטופס.</p>
+    <div class="field">
+      <label for="giftMode">סוג קמפיין</label>
+      <select id="giftMode">
+        <option value="none">קמפיין ללא מתנה</option>
+        <option value="simple_choice">קמפיין המאפשר בחירת מתנה</option>
+        <option value="product_and_gift">קמפיין המאפשר בחירת מוצר ומתנה</option>
+        <option value="product_then_gift">קמפיין המאפשר בחירת מוצר, עם מתנות משויכות לכל מוצר</option>
+      </select>
+    </div>
+    <div id="productsSection"></div>
+    <div id="giftsSection"></div>
+    <p class="msg" id="giftModeMsg"></p>
+  </section>
+
+  <section class="card">
+    <h2>סנכרון ל-ActiveTrail</h2>
+    <p class="subtitle">נרשם חדש בקמפיין הזה יתווסף אוטומטית לקבוצה שתבחר, ברקע ובלי לעכב את ההרשמה — רק אם סימן את תיבת "אני מאשר דיוור וקבלת חומר פרסומי".</p>
+    <div id="activetrailSection"><p class="file-info">טוען…</p></div>
+  </section>
+
   <div>
     <div class="actions">
       <button type="submit" form="campaignForm">שמור שינויים</button>
@@ -197,20 +327,41 @@
   </div>
 
   <section class="card">
-    <h2>נרשמים</h2>
+    <div class="section-header">
+      <h2>נרשמים</h2>
+      <div class="section-header-actions">
+        <a class="ghost" id="dashboardLink" href="#">📈 לוח בקרה</a>
+        <button type="button" class="ghost" id="exportRegistrationsBtn">📊 ייצוא לאקסל</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr id="registrationHeaderRow">
+            <th>תאריך הרשמה</th>
+          </tr>
+        </thead>
+        <tbody id="registrationRows">
+          <tr><td colspan="1" class="empty">טוען…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>היסטוריית שינויים</h2>
+    <p class="subtitle">רישום כל הפעולות שבוצעו בעריכת הקמפיין הזה — מי, מה ומתי.</p>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>שם</th>
-            <th>אימייל</th>
-            <th>אישור שיווקי</th>
-            <th>תאריך הרשמה</th>
-            <th>חשבונית</th>
+            <th>תאריך ושעה</th>
+            <th>משתמש</th>
+            <th>פעולה</th>
           </tr>
         </thead>
-        <tbody id="registrationRows">
-          <tr><td colspan="5" class="empty">טוען…</td></tr>
+        <tbody id="activityLogRows">
+          <tr><td colspan="3" class="empty">טוען…</td></tr>
         </tbody>
       </table>
     </div>
@@ -223,6 +374,40 @@
     document.body.innerHTML = '<main><p>חסר מזהה קמפיין (id) בכתובת.</p></main>';
     throw new Error('missing id');
   }
+  document.getElementById('dashboardLink').href = `/dashboard.html?id=${id}`;
+
+  // Shared across index/edit/users/brands.html (each page keeps its own
+  // copy — this app has no build step to share JS across static pages).
+  // Populates the navy top bar: the nav links (gated to admin-only
+  // pages the same way each page already gates itself) and the
+  // logged-in user's name/role/logout link.
+  const TOPNAV_LINKS = [
+    { href: '/', label: 'קמפיינים', adminOnly: false },
+    { href: '/users.html', label: 'משתמשים', adminOnly: true },
+    { href: '/brands.html', label: 'מותגים', adminOnly: true },
+  ];
+  function renderTopnav(user) {
+    const navEl = document.getElementById('topnavLinks');
+    if (navEl) {
+      navEl.innerHTML = TOPNAV_LINKS
+        .filter((l) => !l.adminOnly || user.role === 'admin')
+        .map((l) => {
+          const isActive = location.pathname === l.href || (l.href === '/' && location.pathname === '/index.html');
+          return `<a href="${l.href}" class="${isActive ? 'active' : ''}">${l.label}</a>`;
+        })
+        .join('');
+    }
+    document.getElementById('userInfo').innerHTML = `
+      <span class="topnav-user-name">${escapeHtml(user.username)}</span>
+      <span>${user.role === 'admin' ? 'אדמין' : 'משתמש רגיל'}</span>
+      <a href="#" id="logoutLink">התנתקות</a>
+    `;
+    document.getElementById('logoutLink').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch('/api/auth/logout', { method: 'POST' });
+      location.href = '/login.html';
+    });
+  }
 
   async function initAuth() {
     const res = await fetch('/api/auth/me');
@@ -231,27 +416,115 @@
       return false;
     }
     const user = await res.json();
-    document.getElementById('userInfo').innerHTML = `
-      <span>${escapeHtml(user.username)} · ${user.role === 'admin' ? 'אדמין' : 'משתמש רגיל'}</span>
-      <a href="#" id="logoutLink">התנתקות</a>
-    `;
-    document.getElementById('logoutLink').addEventListener('click', async (e) => {
-      e.preventDefault();
-      await fetch('/api/auth/logout', { method: 'POST' });
-      location.href = '/login.html';
-    });
+    renderTopnav(user);
     // Only an admin may archive a campaign (the server enforces this
     // too — this just keeps a regular user from picking it at all).
     if (user.role !== 'admin') {
       document.getElementById('archivedOption').disabled = true;
     }
+    startSessionWatchdog();
     return true;
+  }
+
+  // Session now uses an IDLE timeout (10 minutes, see SESSION_TTL_MS
+  // in lib/auth.js), not a fixed lifetime from login: any real
+  // activity on this page (mouse/keyboard/scroll/click) keeps the
+  // session alive by re-minting the cookie via POST /api/auth/refresh
+  // roughly every 30s; once idle that long, it logs out and sends the
+  // admin back to the login screen proactively, not just on their
+  // next click.
+  const IDLE_TIMEOUT_MS = 10 * 60 * 1000;
+  let lastActivityAt = Date.now();
+  ['mousedown', 'mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach((evt) => {
+    document.addEventListener(evt, () => { lastActivityAt = Date.now(); }, { passive: true });
+  });
+
+  function startSessionWatchdog() {
+    setInterval(async () => {
+      if (Date.now() - lastActivityAt >= IDLE_TIMEOUT_MS) {
+        await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+        location.href = '/login.html';
+        return;
+      }
+      const res = await fetch('/api/auth/refresh', { method: 'POST' });
+      if (!res.ok) location.href = '/login.html';
+    }, 30 * 1000);
   }
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, (c) => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
     }[c]));
+  }
+
+  // Kept in sync by hand with renderDescriptionHtml in
+  // lib/campaign-page.js — same escape-first-then-splice-links
+  // approach (including the '|self' same-tab flag), used here only to
+  // preview what the public page will show (the server does its own
+  // independent rendering at display time regardless of what this
+  // preview says).
+  const DESCRIPTION_LINK_PATTERN = /\[([^[\]]+)\]\((https?:\/\/[^\s()|]+)(\|self)?\)/g;
+  function renderDescriptionPreview(text) {
+    return escapeHtml(text).replace(
+      DESCRIPTION_LINK_PATTERN,
+      (match, linkText, url, sameWindow) => (sameWindow
+        ? `<a href="${url}">${linkText}</a>`
+        : `<a href="${url}" target="_blank" rel="noopener noreferrer">${linkText}</a>`)
+    );
+  }
+
+  function updateDescriptionPreview() {
+    const text = document.getElementById('description').value.trim();
+    document.getElementById('descriptionPreview').innerHTML = text
+      ? `תצוגה מקדימה: ${renderDescriptionPreview(text)}`
+      : '';
+  }
+
+  function initDescriptionEditor() {
+    const descriptionEl = document.getElementById('description');
+    const popover = document.getElementById('linkPopover');
+    const linkTextInput = document.getElementById('linkTextInput');
+    const linkUrlInput = document.getElementById('linkUrlInput');
+    const linkNewTabInput = document.getElementById('linkNewTabInput');
+
+    descriptionEl.addEventListener('input', updateDescriptionPreview);
+
+    document.getElementById('insertLinkBtn').addEventListener('click', () => {
+      const selectedText = descriptionEl.value.slice(descriptionEl.selectionStart, descriptionEl.selectionEnd);
+      linkTextInput.value = selectedText;
+      linkUrlInput.value = '';
+      linkNewTabInput.checked = true;
+      popover.hidden = false;
+      (selectedText ? linkUrlInput : linkTextInput).focus();
+    });
+
+    document.getElementById('linkPopoverCancel').addEventListener('click', () => {
+      popover.hidden = true;
+    });
+
+    document.getElementById('linkPopoverConfirm').addEventListener('click', () => {
+      const text = linkTextInput.value.trim();
+      const url = linkUrlInput.value.trim();
+      if (!text || !url) return;
+      if (!/^https?:\/\//i.test(url)) {
+        alert('הכתובת חייבת להתחיל ב-https:// או http://');
+        return;
+      }
+      if (url.includes('|')) {
+        alert('הכתובת לא יכולה להכיל את התו |');
+        return;
+      }
+      const newTabSuffix = linkNewTabInput.checked ? '' : '|self';
+      const markup = `[${text.replace(/[[\]]/g, '')}](${url}${newTabSuffix})`;
+      const start = descriptionEl.selectionStart;
+      const end = descriptionEl.selectionEnd;
+      descriptionEl.value = descriptionEl.value.slice(0, start) + markup + descriptionEl.value.slice(end);
+      const cursorPos = start + markup.length;
+      popover.hidden = true;
+      updateDescriptionPreview();
+      descriptionEl.focus();
+      descriptionEl.setSelectionRange(cursorPos, cursorPos);
+    });
   }
 
   function showMsg(elId, text, kind) {
@@ -334,31 +607,848 @@
     }
   }
 
-  async function loadRegistrations() {
-    const rowsEl = document.getElementById('registrationRows');
-    let registrations;
-    try {
-      registrations = await api(`/api/campaigns/${id}/registrations`);
-    } catch (error) {
-      rowsEl.innerHTML = `<tr><td colspan="5" class="empty">${escapeHtml(error.message)}</td></tr>`;
+  // Gift rows reuse the exact same row/icon-btn/upload-label markup and
+  // patterns as the dynamic-field manager (renderFieldRow/wireFieldRow)
+  // and the campaign banner (renderBanner) — just without a type
+  // selector, since a gift only ever has sku/name/image.
+  function renderGiftRow(gift, idx, total) {
+    return `
+      <div class="field-row" data-gift-id="${gift.id}">
+        <div class="field-row-main">
+          <input class="gift-sku-input" placeholder="מק״ט" value="${escapeHtml(gift.sku || '')}" />
+          <input class="field-label-input gift-name-input" placeholder="שם המתנה" value="${escapeHtml(gift.name)}" />
+          <div class="field-row-actions">
+            <button type="button" class="icon-btn" data-action="up" ${idx === 0 ? 'disabled' : ''} title="הזז למעלה">↑</button>
+            <button type="button" class="icon-btn" data-action="down" ${idx === total - 1 ? 'disabled' : ''} title="הזז למטה">↓</button>
+            <button type="button" class="icon-btn danger" data-action="delete" title="מחק מתנה">🗑</button>
+          </div>
+        </div>
+        <div class="file-row gift-image-row">
+          ${gift.has_image ? `
+            <img class="banner-preview" src="/api/campaigns/${id}/gifts/${gift.id}/image" alt="" />
+            <button type="button" class="ghost danger" data-action="remove-image">הסר תמונה</button>
+          ` : '<span class="file-info">אין תמונה עדיין.</span>'}
+          <label class="upload-label">
+            ${gift.has_image ? 'החלף תמונה' : 'העלה תמונה'}
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="gift-image-input" hidden />
+          </label>
+        </div>
+      </div>`;
+  }
+
+  function wireGiftRow(row) {
+    const giftId = row.getAttribute('data-gift-id');
+    const skuInput = row.querySelector('.gift-sku-input');
+    const nameInput = row.querySelector('.gift-name-input');
+
+    async function saveGift() {
+      const name = nameInput.value.trim();
+      if (!name) {
+        showMsg('giftModeMsg', 'שם המתנה הוא שדה חובה', 'error');
+        return;
+      }
+      try {
+        await api(`/api/campaigns/${id}/gifts/${giftId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ sku: skuInput.value.trim(), name }),
+        });
+        showMsg('giftModeMsg', 'המתנה עודכנה', 'success');
+      } catch (error) {
+        showMsg('giftModeMsg', error.message, 'error');
+      }
+    }
+    skuInput.addEventListener('change', saveGift);
+    nameInput.addEventListener('change', saveGift);
+
+    row.querySelectorAll('.icon-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const action = btn.getAttribute('data-action');
+        if (action === 'delete') {
+          if (!confirm('למחוק את המתנה? הפעולה אינה הפיכה.')) return;
+          try {
+            await api(`/api/campaigns/${id}/gifts/${giftId}`, { method: 'DELETE' });
+            showMsg('giftModeMsg', '');
+            await renderGiftsSection();
+          } catch (error) {
+            showMsg('giftModeMsg', error.message, 'error');
+          }
+          return;
+        }
+        try {
+          await api(`/api/campaigns/${id}/gifts/${giftId}/move`, { method: 'POST', body: JSON.stringify({ direction: action }) });
+          await renderGiftsSection();
+        } catch (error) {
+          showMsg('giftModeMsg', error.message, 'error');
+        }
+      });
+    });
+
+    row.querySelector('.gift-image-input').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const MAX = 2 * 1024 * 1024;
+      if (file.size > MAX) {
+        showMsg('giftModeMsg', 'הקובץ גדול מדי (מקסימום 2MB)', 'error');
+        e.target.value = '';
+        return;
+      }
+      try {
+        const dataUri = await fileToDataUri(file);
+        await api(`/api/campaigns/${id}/gifts/${giftId}/image`, { method: 'PUT', body: JSON.stringify({ image: dataUri }) });
+        showMsg('giftModeMsg', 'התמונה עודכנה', 'success');
+        await renderGiftsSection();
+      } catch (error) {
+        showMsg('giftModeMsg', error.message, 'error');
+      }
+    });
+
+    const removeImageBtn = row.querySelector('[data-action="remove-image"]');
+    if (removeImageBtn) {
+      removeImageBtn.addEventListener('click', async () => {
+        if (!confirm('להסיר את התמונה?')) return;
+        try {
+          await api(`/api/campaigns/${id}/gifts/${giftId}/image`, { method: 'DELETE' });
+          showMsg('giftModeMsg', '');
+          await renderGiftsSection();
+        } catch (error) {
+          showMsg('giftModeMsg', error.message, 'error');
+        }
+      });
+    }
+  }
+
+  async function renderGiftsSection() {
+    const section = document.getElementById('giftsSection');
+    const mode = document.getElementById('giftMode').value;
+    if (mode !== 'simple_choice' && mode !== 'product_and_gift') {
+      section.innerHTML = '';
       return;
     }
 
+    let gifts;
+    try {
+      gifts = await api(`/api/campaigns/${id}/gifts`);
+    } catch (error) {
+      section.innerHTML = `<p class="fields-empty">${escapeHtml(error.message)}</p>`;
+      return;
+    }
+
+    section.innerHTML = `
+      <div id="giftsList">
+        ${gifts.length === 0
+          ? '<p class="fields-empty">אין עדיין מתנות. הוסף מתנה כדי לאפשר בחירה בטופס הציבורי.</p>'
+          : gifts.map((g, i) => renderGiftRow(g, i, gifts.length)).join('')}
+      </div>
+      <button type="button" class="ghost" id="addGiftBtn">+ הוסף מתנה</button>
+    `;
+
+    section.querySelectorAll('.field-row').forEach((row) => wireGiftRow(row));
+
+    document.getElementById('addGiftBtn').addEventListener('click', async () => {
+      try {
+        await api(`/api/campaigns/${id}/gifts`, {
+          method: 'POST',
+          body: JSON.stringify({ sku: '', name: 'מתנה חדשה' }),
+        });
+        await renderGiftsSection();
+      } catch (error) {
+        showMsg('giftModeMsg', error.message, 'error');
+      }
+    });
+  }
+
+  // Products manager — mirrors the gift manager above exactly (same
+  // row markup/actions). Shown for 'product_and_gift' (an independent
+  // list alongside, not filtering, the gift list) and 'product_then_gift'
+  // — the latter passes `nestedGifts` (an array, possibly empty) so
+  // each product row also gets its own scoped gift sub-list; passing
+  // null omits that block entirely (the 'product_and_gift' case).
+  function renderProductRow(product, idx, total, nestedGifts) {
+    return `
+      <div class="field-row" data-product-id="${product.id}">
+        <div class="field-row-main">
+          <input class="gift-sku-input" placeholder="מק״ט" value="${escapeHtml(product.sku || '')}" />
+          <input class="field-label-input gift-name-input" placeholder="שם המוצר" value="${escapeHtml(product.name)}" />
+          <div class="field-row-actions">
+            <button type="button" class="icon-btn" data-action="up" ${idx === 0 ? 'disabled' : ''} title="הזז למעלה">↑</button>
+            <button type="button" class="icon-btn" data-action="down" ${idx === total - 1 ? 'disabled' : ''} title="הזז למטה">↓</button>
+            <button type="button" class="icon-btn danger" data-action="delete" title="מחק מוצר">🗑</button>
+          </div>
+        </div>
+        <div class="file-row gift-image-row">
+          ${product.has_image ? `
+            <img class="banner-preview" src="/api/campaigns/${id}/products/${product.id}/image" alt="" />
+            <button type="button" class="ghost danger" data-action="remove-image">הסר תמונה</button>
+          ` : '<span class="file-info">אין תמונה עדיין.</span>'}
+          <label class="upload-label">
+            ${product.has_image ? 'החלף תמונה' : 'העלה תמונה'}
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="gift-image-input" hidden />
+          </label>
+        </div>
+        ${nestedGifts !== null ? `
+          <div class="nested-gifts">
+            <div class="field-hint">מתנות עבור המוצר הזה:</div>
+            <div class="nested-gifts-list">
+              ${nestedGifts.length === 0
+                ? '<p class="fields-empty">אין עדיין מתנות למוצר הזה.</p>'
+                : nestedGifts.map((g, gi) => renderNestedGiftRow(g, gi, nestedGifts.length)).join('')}
+            </div>
+            <button type="button" class="ghost" data-action="add-nested-gift">+ הוסף מתנה למוצר זה</button>
+          </div>
+        ` : ''}
+      </div>`;
+  }
+
+  // A gift row nested under its product — same fields/actions as
+  // renderGiftRow, but a distinct class (not .field-row) so the
+  // products-section wiring below only picks up top-level product rows.
+  function renderNestedGiftRow(gift, idx, total) {
+    return `
+      <div class="nested-gift-row" data-gift-id="${gift.id}">
+        <div class="field-row-main">
+          <input class="gift-sku-input" placeholder="מק״ט" value="${escapeHtml(gift.sku || '')}" />
+          <input class="field-label-input gift-name-input" placeholder="שם המתנה" value="${escapeHtml(gift.name)}" />
+          <div class="field-row-actions">
+            <button type="button" class="icon-btn" data-action="up" ${idx === 0 ? 'disabled' : ''} title="הזז למעלה">↑</button>
+            <button type="button" class="icon-btn" data-action="down" ${idx === total - 1 ? 'disabled' : ''} title="הזז למטה">↓</button>
+            <button type="button" class="icon-btn danger" data-action="delete" title="מחק מתנה">🗑</button>
+          </div>
+        </div>
+        <div class="file-row gift-image-row">
+          ${gift.has_image ? `
+            <img class="banner-preview" src="/api/campaigns/${id}/gifts/${gift.id}/image" alt="" />
+            <button type="button" class="ghost danger" data-action="remove-image">הסר תמונה</button>
+          ` : '<span class="file-info">אין תמונה עדיין.</span>'}
+          <label class="upload-label">
+            ${gift.has_image ? 'החלף תמונה' : 'העלה תמונה'}
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="gift-image-input" hidden />
+          </label>
+        </div>
+      </div>`;
+  }
+
+  function wireNestedGiftRow(row) {
+    const giftId = row.getAttribute('data-gift-id');
+    const skuInput = row.querySelector('.gift-sku-input');
+    const nameInput = row.querySelector('.gift-name-input');
+
+    async function saveGift() {
+      const name = nameInput.value.trim();
+      if (!name) {
+        showMsg('giftModeMsg', 'שם המתנה הוא שדה חובה', 'error');
+        return;
+      }
+      try {
+        await api(`/api/campaigns/${id}/gifts/${giftId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ sku: skuInput.value.trim(), name }),
+        });
+        showMsg('giftModeMsg', 'המתנה עודכנה', 'success');
+      } catch (error) {
+        showMsg('giftModeMsg', error.message, 'error');
+      }
+    }
+    skuInput.addEventListener('change', saveGift);
+    nameInput.addEventListener('change', saveGift);
+
+    row.querySelectorAll('.icon-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const action = btn.getAttribute('data-action');
+        if (action === 'delete') {
+          if (!confirm('למחוק את המתנה? הפעולה אינה הפיכה.')) return;
+          try {
+            await api(`/api/campaigns/${id}/gifts/${giftId}`, { method: 'DELETE' });
+            showMsg('giftModeMsg', '');
+            await renderProductsSection();
+          } catch (error) {
+            showMsg('giftModeMsg', error.message, 'error');
+          }
+          return;
+        }
+        try {
+          await api(`/api/campaigns/${id}/gifts/${giftId}/move`, { method: 'POST', body: JSON.stringify({ direction: action }) });
+          await renderProductsSection();
+        } catch (error) {
+          showMsg('giftModeMsg', error.message, 'error');
+        }
+      });
+    });
+
+    row.querySelector('.gift-image-input').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const MAX = 2 * 1024 * 1024;
+      if (file.size > MAX) {
+        showMsg('giftModeMsg', 'הקובץ גדול מדי (מקסימום 2MB)', 'error');
+        e.target.value = '';
+        return;
+      }
+      try {
+        const dataUri = await fileToDataUri(file);
+        await api(`/api/campaigns/${id}/gifts/${giftId}/image`, { method: 'PUT', body: JSON.stringify({ image: dataUri }) });
+        showMsg('giftModeMsg', 'התמונה עודכנה', 'success');
+        await renderProductsSection();
+      } catch (error) {
+        showMsg('giftModeMsg', error.message, 'error');
+      }
+    });
+
+    const removeImageBtn = row.querySelector('[data-action="remove-image"]');
+    if (removeImageBtn) {
+      removeImageBtn.addEventListener('click', async () => {
+        if (!confirm('להסיר את התמונה?')) return;
+        try {
+          await api(`/api/campaigns/${id}/gifts/${giftId}/image`, { method: 'DELETE' });
+          showMsg('giftModeMsg', '');
+          await renderProductsSection();
+        } catch (error) {
+          showMsg('giftModeMsg', error.message, 'error');
+        }
+      });
+    }
+  }
+
+  function wireProductRow(row) {
+    const productId = row.getAttribute('data-product-id');
+    const skuInput = row.querySelector('.gift-sku-input');
+    const nameInput = row.querySelector('.gift-name-input');
+
+    async function saveProduct() {
+      const name = nameInput.value.trim();
+      if (!name) {
+        showMsg('giftModeMsg', 'שם המוצר הוא שדה חובה', 'error');
+        return;
+      }
+      try {
+        await api(`/api/campaigns/${id}/products/${productId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ sku: skuInput.value.trim(), name }),
+        });
+        showMsg('giftModeMsg', 'המוצר עודכן', 'success');
+      } catch (error) {
+        showMsg('giftModeMsg', error.message, 'error');
+      }
+    }
+    skuInput.addEventListener('change', saveProduct);
+    nameInput.addEventListener('change', saveProduct);
+
+    // Scoped to the product's own control row specifically — a
+    // 'product_then_gift' row also contains nested gift rows with
+    // their own .icon-btn elements (wired separately, by
+    // wireNestedGiftRow), which a plain row.querySelectorAll('.icon-btn')
+    // would incorrectly also pick up.
+    row.querySelector('.field-row-main').querySelectorAll('.icon-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const action = btn.getAttribute('data-action');
+        if (action === 'delete') {
+          if (!confirm('למחוק את המוצר? הפעולה אינה הפיכה.')) return;
+          try {
+            await api(`/api/campaigns/${id}/products/${productId}`, { method: 'DELETE' });
+            showMsg('giftModeMsg', '');
+            await renderProductsSection();
+          } catch (error) {
+            showMsg('giftModeMsg', error.message, 'error');
+          }
+          return;
+        }
+        try {
+          await api(`/api/campaigns/${id}/products/${productId}/move`, { method: 'POST', body: JSON.stringify({ direction: action }) });
+          await renderProductsSection();
+        } catch (error) {
+          showMsg('giftModeMsg', error.message, 'error');
+        }
+      });
+    });
+
+    row.querySelector('.gift-image-input').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const MAX = 2 * 1024 * 1024;
+      if (file.size > MAX) {
+        showMsg('giftModeMsg', 'הקובץ גדול מדי (מקסימום 2MB)', 'error');
+        e.target.value = '';
+        return;
+      }
+      try {
+        const dataUri = await fileToDataUri(file);
+        await api(`/api/campaigns/${id}/products/${productId}/image`, { method: 'PUT', body: JSON.stringify({ image: dataUri }) });
+        showMsg('giftModeMsg', 'התמונה עודכנה', 'success');
+        await renderProductsSection();
+      } catch (error) {
+        showMsg('giftModeMsg', error.message, 'error');
+      }
+    });
+
+    const removeImageBtn = row.querySelector('[data-action="remove-image"]');
+    if (removeImageBtn) {
+      removeImageBtn.addEventListener('click', async () => {
+        if (!confirm('להסיר את התמונה?')) return;
+        try {
+          await api(`/api/campaigns/${id}/products/${productId}/image`, { method: 'DELETE' });
+          showMsg('giftModeMsg', '');
+          await renderProductsSection();
+        } catch (error) {
+          showMsg('giftModeMsg', error.message, 'error');
+        }
+      });
+    }
+
+    // 'product_then_gift' only — the nested gift sub-list and its
+    // "add gift" button, both scoped to this specific product.
+    row.querySelectorAll('.nested-gift-row').forEach((giftRow) => wireNestedGiftRow(giftRow));
+    const addGiftBtn = row.querySelector('[data-action="add-nested-gift"]');
+    if (addGiftBtn) {
+      addGiftBtn.addEventListener('click', async () => {
+        try {
+          await api(`/api/campaigns/${id}/gifts`, {
+            method: 'POST',
+            body: JSON.stringify({ sku: '', name: 'מתנה חדשה', product_id: Number(productId) }),
+          });
+          await renderProductsSection();
+        } catch (error) {
+          showMsg('giftModeMsg', error.message, 'error');
+        }
+      });
+    }
+  }
+
+  async function renderProductsSection() {
+    const section = document.getElementById('productsSection');
+    const mode = document.getElementById('giftMode').value;
+    if (mode !== 'product_and_gift' && mode !== 'product_then_gift') {
+      section.innerHTML = '';
+      return;
+    }
+
+    let products, giftsByProduct = null;
+    try {
+      products = await api(`/api/campaigns/${id}/products`);
+      if (mode === 'product_then_gift') {
+        const allGifts = await api(`/api/campaigns/${id}/gifts`);
+        giftsByProduct = {};
+        for (const g of allGifts) {
+          if (!g.product_id) continue; // shouldn't happen in this mode, but be defensive
+          (giftsByProduct[g.product_id] = giftsByProduct[g.product_id] || []).push(g);
+        }
+      }
+    } catch (error) {
+      section.innerHTML = `<p class="fields-empty">${escapeHtml(error.message)}</p>`;
+      return;
+    }
+
+    const intro = mode === 'product_then_gift'
+      ? 'מוצרים שהנרשם יכול לבחור ביניהם (איזה מוצר רכש) — ולכל מוצר, המתנות שיוצגו כשהוא נבחר:'
+      : 'מוצרים שהנרשם יכול לבחור ביניהם (איזה מוצר רכש):';
+    section.innerHTML = `
+      <div class="field-hint" style="margin-bottom:8px;">${intro}</div>
+      <div id="productsList">
+        ${products.length === 0
+          ? '<p class="fields-empty">אין עדיין מוצרים. הוסף מוצר כדי לאפשר בחירה בטופס הציבורי.</p>'
+          : products.map((p, i) => renderProductRow(p, i, products.length, giftsByProduct ? (giftsByProduct[p.id] || []) : null)).join('')}
+      </div>
+      <button type="button" class="ghost" id="addProductBtn">+ הוסף מוצר</button>
+    `;
+
+    section.querySelectorAll('.field-row').forEach((row) => wireProductRow(row));
+
+    document.getElementById('addProductBtn').addEventListener('click', async () => {
+      try {
+        await api(`/api/campaigns/${id}/products`, {
+          method: 'POST',
+          body: JSON.stringify({ sku: '', name: 'מוצר חדש' }),
+        });
+        await renderProductsSection();
+      } catch (error) {
+        showMsg('giftModeMsg', error.message, 'error');
+      }
+    });
+  }
+
+  document.getElementById('giftMode').addEventListener('change', async () => {
+    const mode = document.getElementById('giftMode').value;
+    try {
+      await api(`/api/campaigns/${id}`, { method: 'PUT', body: JSON.stringify({ gift_mode: mode }) });
+      showMsg('giftModeMsg', 'ההגדרה נשמרה', 'success');
+      await Promise.all([renderGiftsSection(), renderProductsSection()]);
+    } catch (error) {
+      showMsg('giftModeMsg', error.message, 'error');
+    }
+  });
+
+  function formatCustomFieldValue(field, customFields, registrationId) {
+    const value = customFields ? customFields[field.id] : undefined;
+    if (field.type === 'checkbox') return value ? '<span class="yes">כן</span>' : '<span class="no">לא</span>';
+    if (value === undefined || value === null || value === '') return '<span class="no">-</span>';
+    if (field.type === 'file') {
+      return `<a href="/api/registrations/${registrationId}/fields/${field.id}/file" target="_blank" rel="noopener" title="${escapeHtml(value)}">📄</a>`;
+    }
+    return escapeHtml(value);
+  }
+
+  function formatSelectedGift(r) {
+    if (!r.selected_gift_name) return '<span class="no">-</span>';
+    return r.selected_gift_sku
+      ? `${escapeHtml(r.selected_gift_name)} <span class="file-info">(${escapeHtml(r.selected_gift_sku)})</span>`
+      : escapeHtml(r.selected_gift_name);
+  }
+
+  function formatSelectedProduct(r) {
+    if (!r.selected_product_name) return '<span class="no">-</span>';
+    return r.selected_product_sku
+      ? `${escapeHtml(r.selected_product_name)} <span class="file-info">(${escapeHtml(r.selected_product_sku)})</span>`
+      : escapeHtml(r.selected_product_name);
+  }
+
+  // Neutralizes a value that would otherwise make Excel/LibreOffice
+  // treat this cell as a formula when opening the CSV — a known CSV-
+  // injection risk (a malicious registrant could type e.g. a leading
+  // "=", "+", "-" or "@" into a free-text field, hoping whoever opens
+  // the export runs it as a formula). Only applied to plain
+  // user-submitted text; the HYPERLINK formula built for a 'file'
+  // field below is *intentional* and deliberately left alone.
+  function sanitizeCsvCell(value) {
+    const str = String(value ?? '');
+    return /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+  }
+
+  // Plain-text counterparts of formatCustomFieldValue/formatSelectedGift
+  // (no HTML) — used only for the Excel/CSV export below, where a
+  // spreadsheet cell needs the raw value. A 'file' field becomes a real
+  // Excel HYPERLINK() formula so the uploaded file opens with one click
+  // (the label's own quotes are escaped for the formula's string
+  // syntax — a different layer from csvEscape's CSV-level quoting,
+  // which still wraps the whole formula since it contains commas/quotes).
+  function plainCustomFieldValue(field, customFields, registrationId, origin) {
+    const value = customFields ? customFields[field.id] : undefined;
+    if (field.type === 'checkbox') return value ? 'כן' : 'לא';
+    if (value === undefined || value === null || value === '') return '';
+    if (field.type === 'file') {
+      const url = `${origin}/api/registrations/${registrationId}/fields/${field.id}/file`;
+      const label = `📄 ${value}`.replace(/"/g, '""');
+      return `=HYPERLINK("${url}","${label}")`;
+    }
+    return sanitizeCsvCell(value);
+  }
+
+  function plainSelectedGift(r) {
+    if (!r.selected_gift_name) return '';
+    const text = r.selected_gift_sku ? `${r.selected_gift_name} (${r.selected_gift_sku})` : r.selected_gift_name;
+    return sanitizeCsvCell(text);
+  }
+
+  function plainSelectedProduct(r) {
+    if (!r.selected_product_name) return '';
+    const text = r.selected_product_sku ? `${r.selected_product_name} (${r.selected_product_sku})` : r.selected_product_name;
+    return sanitizeCsvCell(text);
+  }
+
+  function csvEscape(value) {
+    const str = String(value ?? '');
+    return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+  }
+
+  // Builds the same rows/columns the registrants table shows and
+  // downloads them as CSV with a UTF-8 BOM — every version of Excel
+  // opens that directly (correctly showing Hebrew, not mojibake)
+  // without needing a spreadsheet-writing library/dependency.
+  async function exportRegistrationsToExcel() {
+    let registrations, fields, campaign;
+    try {
+      [registrations, fields, campaign] = await Promise.all([
+        api(`/api/campaigns/${id}/registrations`),
+        api(`/api/campaigns/${id}/fields`),
+        api(`/api/campaigns/${id}`),
+      ]);
+    } catch (error) {
+      alert('שגיאה בטעינת הנתונים לייצוא: ' + error.message);
+      return;
+    }
     if (registrations.length === 0) {
-      rowsEl.innerHTML = '<tr><td colspan="5" class="empty">עדיין אין נרשמים.</td></tr>';
+      alert('אין נרשמים לייצוא.');
+      return;
+    }
+
+    const showGiftColumn = campaign.gift_mode === 'simple_choice' || campaign.gift_mode === 'product_and_gift' || campaign.gift_mode === 'product_then_gift';
+    const showProductColumn = campaign.gift_mode === 'product_and_gift' || campaign.gift_mode === 'product_then_gift';
+    const headers = [
+      ...fields.map((f) => sanitizeCsvCell(f.label)),
+      ...(showProductColumn ? ['מוצר שנרכש'] : []),
+      ...(showGiftColumn ? ['מתנה שנבחרה'] : []),
+      'תאריך הרשמה',
+    ];
+    const rows = registrations.map((r) => [
+      ...fields.map((f) => plainCustomFieldValue(f, r.custom_fields, r.id, location.origin)),
+      ...(showProductColumn ? [plainSelectedProduct(r)] : []),
+      ...(showGiftColumn ? [plainSelectedGift(r)] : []),
+      new Date(r.created_at).toLocaleDateString('he-IL'),
+    ]);
+
+    const csv = [headers, ...rows].map((row) => row.map(csvEscape).join(',')).join('\r\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const safeName = (campaign.name || 'קמפיין').replace(/[\\/:*?"<>|]/g, '_');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `נרשמים-${safeName}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById('exportRegistrationsBtn').addEventListener('click', exportRegistrationsToExcel);
+
+  async function loadActivityLog() {
+    const rowsEl = document.getElementById('activityLogRows');
+    let log;
+    try {
+      log = await api(`/api/campaigns/${id}/activity-log`);
+    } catch (error) {
+      rowsEl.innerHTML = `<tr><td colspan="3" class="empty">${escapeHtml(error.message)}</td></tr>`;
+      return;
+    }
+    if (log.length === 0) {
+      rowsEl.innerHTML = '<tr><td colspan="3" class="empty">אין עדיין פעולות רשומות.</td></tr>';
+      return;
+    }
+    rowsEl.innerHTML = log.map((entry) => `
+      <tr>
+        <td>${new Date(entry.created_at).toLocaleString('he-IL')}</td>
+        <td>${escapeHtml(entry.username || 'לא ידוע')}</td>
+        <td>${escapeHtml(entry.action)}</td>
+      </tr>
+    `).join('');
+  }
+
+  async function loadRegistrations() {
+    const rowsEl = document.getElementById('registrationRows');
+    const headerEl = document.getElementById('registrationHeaderRow');
+    let registrations, fields, campaign;
+    try {
+      [registrations, fields, campaign] = await Promise.all([
+        api(`/api/campaigns/${id}/registrations`),
+        api(`/api/campaigns/${id}/fields`),
+        api(`/api/campaigns/${id}`),
+      ]);
+    } catch (error) {
+      rowsEl.innerHTML = `<tr><td colspan="1" class="empty">${escapeHtml(error.message)}</td></tr>`;
+      return;
+    }
+
+    // Only the campaign's own dynamic fields, plus the registration
+    // timestamp (that's metadata, not a form field) — the old fixed
+    // columns (name/email/consent/invoice) are gone, superseded by
+    // whatever dynamic fields the campaign actually defines now. The
+    // gift/product columns only make sense for a gift-choice campaign.
+    const showGiftColumn = campaign.gift_mode === 'simple_choice' || campaign.gift_mode === 'product_and_gift' || campaign.gift_mode === 'product_then_gift';
+    const showProductColumn = campaign.gift_mode === 'product_and_gift' || campaign.gift_mode === 'product_then_gift';
+    const colCount = 1 + fields.length + (showGiftColumn ? 1 : 0) + (showProductColumn ? 1 : 0);
+    headerEl.innerHTML = `
+      ${fields.map((f) => `<th>${escapeHtml(f.label)}</th>`).join('')}
+      ${showProductColumn ? '<th>מוצר שנרכש</th>' : ''}
+      ${showGiftColumn ? '<th>מתנה שנבחרה</th>' : ''}
+      <th>תאריך הרשמה</th>
+    `;
+
+    if (registrations.length === 0) {
+      rowsEl.innerHTML = `<tr><td colspan="${colCount}" class="empty">עדיין אין נרשמים.</td></tr>`;
       return;
     }
 
     rowsEl.innerHTML = registrations.map((r) => `
       <tr>
-        <td>${escapeHtml(r.first_name)} ${escapeHtml(r.last_name)}</td>
-        <td>${escapeHtml(r.email) || '-'}</td>
-        <td>${r.marketing_consent ? '<span class="yes">כן</span>' : '<span class="no">לא</span>'}</td>
+        ${fields.map((f) => `<td>${formatCustomFieldValue(f, r.custom_fields, r.id)}</td>`).join('')}
+        ${showProductColumn ? `<td>${formatSelectedProduct(r)}</td>` : ''}
+        ${showGiftColumn ? `<td>${formatSelectedGift(r)}</td>` : ''}
         <td>${new Date(r.created_at).toLocaleDateString('he-IL')}</td>
-        <td><a href="/api/registrations/${r.id}/invoice" target="_blank" rel="noopener">📄 ${escapeHtml(r.invoice_filename) || 'צפה'}</a></td>
       </tr>
     `).join('');
   }
+
+  const FIELD_TYPE_LABELS = {
+    text: 'טקסט', email: 'דואר אלקטרוני', phone: 'מספר טלפון', date: 'תאריך (dd/mm/yy)',
+    select: 'בחירה מרשימה', checkbox: "צ'קבוקס", file: 'העלאת קובץ (עד 1MB)',
+  };
+
+  const DEFAULT_TEXT_MAX_LENGTH = 200;
+
+  function renderFieldRow(field, idx, total) {
+    const valuesText = field.type === 'select' ? ((field.options && field.options.values) || []).join('\n') : '';
+    const maxLength = (field.options && field.options.max_length) || DEFAULT_TEXT_MAX_LENGTH;
+    return `
+      <div class="field-row" data-field-id="${field.id}">
+        <div class="field-row-main">
+          <input class="field-label-input" placeholder="שם השדה" value="${escapeHtml(field.label)}" />
+          <select class="field-type-select">
+            ${Object.entries(FIELD_TYPE_LABELS).map(([v, l]) => `<option value="${v}" ${v === field.type ? 'selected' : ''}>${l}</option>`).join('')}
+          </select>
+          <label class="field-required-toggle">
+            <input type="checkbox" class="field-required-input" ${field.required ? 'checked' : ''} /> שדה חובה
+          </label>
+          <div class="field-row-actions">
+            <button type="button" class="icon-btn" data-action="up" ${idx === 0 ? 'disabled' : ''} title="הזז למעלה">↑</button>
+            <button type="button" class="icon-btn" data-action="down" ${idx === total - 1 ? 'disabled' : ''} title="הזז למטה">↓</button>
+            <button type="button" class="icon-btn danger" data-action="delete" title="מחק שדה">🗑</button>
+          </div>
+        </div>
+        <div class="field-row-extra" data-extra-for="select" style="display:${field.type === 'select' ? 'block' : 'none'}">
+          <label>ערכים לבחירה (שורה לכל ערך)</label>
+          <textarea class="field-values-input" rows="3" placeholder="ערך 1&#10;ערך 2">${escapeHtml(valuesText)}</textarea>
+        </div>
+        <div class="field-row-extra" data-extra-for="text" style="display:${field.type === 'text' ? 'block' : 'none'}">
+          <label>מגבלת תווים</label>
+          <input type="number" class="field-maxlength-input" min="1" max="5000" value="${maxLength}" style="max-width:120px" />
+        </div>
+        <p class="field-hint" data-extra-for="checkbox" style="display:${field.type === 'checkbox' ? 'block' : 'none'}">
+          הטקסט שהוזן ב״שם השדה״ יוצג ליד תיבת הסימון בטופס הציבורי.
+        </p>
+        <p class="field-hint" data-extra-for="file" style="display:${field.type === 'file' ? 'block' : 'none'}">
+          הקובץ מוגבל לגודל של 1MB. סוגים נתמכים: PDF, PNG, JPEG, WEBP, GIF.
+        </p>
+        <p class="field-hint" data-extra-for="phone" style="display:${field.type === 'phone' ? 'block' : 'none'}">
+          מספר עם 7–15 ספרות (ניתן לכלול +, רווחים, מקפים וסוגריים).
+        </p>
+      </div>`;
+  }
+
+  // A fixed field (currently just the marketing-consent checkbox) is
+  // provisioned automatically for every campaign and always sorts
+  // last — see FIELDS_DISPLAY_ORDER in lib/handlers.js. Only its label
+  // (the text next to the checkbox) is editable here.
+  function renderFixedFieldRow(field) {
+    return `
+      <div class="field-row field-row-fixed" data-field-id="${field.id}" data-fixed="1">
+        <div class="field-row-main">
+          <input class="field-label-input" placeholder="טקסט ליד תיבת הסימון" value="${escapeHtml(field.label)}" />
+          <span class="field-fixed-badge">צ'קבוקס · קבוע · תמיד אחרון</span>
+        </div>
+        <p class="field-hint">
+          שדה קבוע שקיים בכל קמפיין ומוצג תמיד אחרון בטופס הציבורי. אפשר לערוך רק את הטקסט שלידו —
+          אי אפשר למחוק אותו, להזיז אותו או להפוך אותו לשדה חובה.
+        </p>
+      </div>`;
+  }
+
+  function wireFixedFieldRow(row) {
+    const fieldId = row.getAttribute('data-field-id');
+    const labelInput = row.querySelector('.field-label-input');
+    labelInput.addEventListener('change', async () => {
+      try {
+        await api(`/api/campaigns/${id}/fields/${fieldId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ label: labelInput.value.trim() }),
+        });
+        showMsg('fieldsMsg', 'השדה עודכן', 'success');
+        await loadRegistrations();
+      } catch (error) {
+        showMsg('fieldsMsg', error.message, 'error');
+      }
+    });
+  }
+
+  function wireFieldRow(row) {
+    const fieldId = row.getAttribute('data-field-id');
+    const typeSelect = row.querySelector('.field-type-select');
+    const labelInput = row.querySelector('.field-label-input');
+    const requiredInput = row.querySelector('.field-required-input');
+    const valuesInput = row.querySelector('.field-values-input');
+    const maxLengthInput = row.querySelector('.field-maxlength-input');
+
+    function toggleExtras() {
+      const type = typeSelect.value;
+      row.querySelectorAll('[data-extra-for]').forEach((el) => {
+        el.style.display = el.getAttribute('data-extra-for') === type ? 'block' : 'none';
+      });
+    }
+
+    async function save() {
+      const type = typeSelect.value;
+      const payload = { type, label: labelInput.value.trim(), required: requiredInput.checked };
+      if (type === 'select') {
+        payload.options = { values: valuesInput.value.split('\n').map((v) => v.trim()).filter(Boolean) };
+      }
+      if (type === 'text') {
+        payload.options = { max_length: Number(maxLengthInput.value) || DEFAULT_TEXT_MAX_LENGTH };
+      }
+      try {
+        await api(`/api/campaigns/${id}/fields/${fieldId}`, { method: 'PUT', body: JSON.stringify(payload) });
+        showMsg('fieldsMsg', 'השדה עודכן', 'success');
+        await loadRegistrations();
+      } catch (error) {
+        showMsg('fieldsMsg', error.message, 'error');
+      }
+    }
+
+    typeSelect.addEventListener('change', () => { toggleExtras(); save(); });
+    labelInput.addEventListener('change', save);
+    requiredInput.addEventListener('change', save);
+    if (valuesInput) valuesInput.addEventListener('change', save);
+    if (maxLengthInput) maxLengthInput.addEventListener('change', save);
+
+    row.querySelectorAll('.icon-btn').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const action = btn.getAttribute('data-action');
+        if (action === 'delete') {
+          if (!confirm('למחוק את השדה? הפעולה אינה הפיכה.')) return;
+          try {
+            await api(`/api/campaigns/${id}/fields/${fieldId}`, { method: 'DELETE' });
+            showMsg('fieldsMsg', '');
+            await renderFieldsSection();
+            await loadRegistrations();
+          } catch (error) {
+            showMsg('fieldsMsg', error.message, 'error');
+          }
+          return;
+        }
+        try {
+          await api(`/api/campaigns/${id}/fields/${fieldId}/move`, { method: 'POST', body: JSON.stringify({ direction: action }) });
+          await renderFieldsSection();
+        } catch (error) {
+          showMsg('fieldsMsg', error.message, 'error');
+        }
+      });
+    });
+  }
+
+  async function renderFieldsSection() {
+    const list = document.getElementById('fieldsList');
+    const fixedList = document.getElementById('fixedFieldsList');
+    let fields;
+    try {
+      fields = await api(`/api/campaigns/${id}/fields`);
+    } catch (error) {
+      list.innerHTML = `<p class="fields-empty">${escapeHtml(error.message)}</p>`;
+      fixedList.innerHTML = '';
+      return;
+    }
+
+    // Fixed fields (e.g. the marketing-consent checkbox) don't take
+    // part in reordering and render in their own spot below the "add
+    // field" button, separate from the campaign's own custom fields.
+    const reorderable = fields.filter((f) => !f.fixed_key);
+    const fixed = fields.filter((f) => f.fixed_key);
+
+    list.innerHTML = reorderable.length === 0
+      ? '<p class="fields-empty">אין עדיין שדות מותאמים אישית נוספים.</p>'
+      : reorderable.map((f, i) => renderFieldRow(f, i, reorderable.length)).join('');
+    fixedList.innerHTML = fixed.map((f) => renderFixedFieldRow(f)).join('');
+
+    list.querySelectorAll('.field-row').forEach((row) => wireFieldRow(row));
+    fixedList.querySelectorAll('.field-row').forEach((row) => wireFixedFieldRow(row));
+  }
+
+  document.getElementById('addFieldBtn').addEventListener('click', async () => {
+    try {
+      await api(`/api/campaigns/${id}/fields`, {
+        method: 'POST',
+        body: JSON.stringify({ type: 'text', label: 'שדה חדש', required: false }),
+      });
+      await renderFieldsSection();
+      await loadRegistrations();
+    } catch (error) {
+      showMsg('fieldsMsg', error.message, 'error');
+    }
+  });
 
   let selectedTemplate = 'classic';
   const DEFAULT_TEMPLATE = 'classic';
@@ -398,27 +1488,124 @@
     });
   }
 
+  // Everything here is configured per campaign (its own ActiveTrail
+  // token + group code), not a shared server credential. The token is
+  // a secret: the API never returns its value back (only
+  // has_activetrail_token), so the input starts empty with a
+  // placeholder hinting whether one's already saved — leaving it blank
+  // on save keeps whatever's already stored.
+  async function renderActiveTrailSection(campaign) {
+    const wrap = document.getElementById('activetrailSection');
+    let fields = [];
+    try {
+      fields = await api(`/api/campaigns/${id}/fields`);
+    } catch (error) {
+      wrap.innerHTML = `<p class="file-info">${escapeHtml(error.message)}</p>`;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <div class="grid">
+        <div class="field">
+          <label for="activetrailToken">טוקן API</label>
+          <input type="password" id="activetrailToken" autocomplete="off"
+            placeholder="${campaign.has_activetrail_token ? '•••••••• (טוקן קיים — השאר ריק כדי לשמור)' : 'הזן טוקן API'}" />
+        </div>
+        <div class="field">
+          <label for="activetrailGroupId">קוד קבוצה</label>
+          <input type="text" id="activetrailGroupId" value="${escapeHtml(campaign.activetrail_group_id || '')}" placeholder="לדוגמה: 12345" />
+        </div>
+        <div class="field wide">
+          <label for="activetrailEmailField">שדה האימייל לשליחה</label>
+          <select id="activetrailEmailField">
+            <option value="">בחר שדה…</option>
+            ${fields.map((f) => `<option value="${f.id}" ${f.id === campaign.activetrail_email_field_id ? 'selected' : ''}>${escapeHtml(f.label)} (${FIELD_TYPE_LABELS[f.type] || f.type})</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      ${campaign.has_activetrail_token ? '<button type="button" class="ghost danger" id="clearActivetrailToken" style="margin-top:10px;">הסר טוקן</button>' : ''}
+      <p class="msg" id="activetrailMsg"></p>
+    `;
+
+    async function save(overrides) {
+      const token = document.getElementById('activetrailToken').value;
+      const groupId = document.getElementById('activetrailGroupId').value.trim() || null;
+      const emailFieldId = document.getElementById('activetrailEmailField').value || null;
+      const payload = {
+        activetrail_group_id: groupId,
+        activetrail_email_field_id: emailFieldId ? Number(emailFieldId) : null,
+      };
+      if (token) payload.activetrail_token = token; // only touch it if the admin actually typed one
+      Object.assign(payload, overrides);
+      try {
+        const updated = await api(`/api/campaigns/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        showMsg('activetrailMsg', 'ההגדרות נשמרו', 'success');
+        await renderActiveTrailSection(updated);
+      } catch (error) {
+        showMsg('activetrailMsg', error.message, 'error');
+      }
+    }
+
+    document.getElementById('activetrailToken').addEventListener('change', () => save());
+    document.getElementById('activetrailGroupId').addEventListener('change', () => save());
+    document.getElementById('activetrailEmailField').addEventListener('change', () => save());
+    const clearBtn = document.getElementById('clearActivetrailToken');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        if (!confirm('להסיר את טוקן ה-API? הסנכרון לקמפיין הזה ייעצר עד שיוזן טוקן חדש.')) return;
+        save({ activetrail_token: null });
+      });
+    }
+  }
+
+  // Set on every reload() to whatever the campaign's brand currently
+  // is — used only to build the public-URL preview below the slug
+  // field (the brand half of /c/:brandSlug/:campaignSlug isn't
+  // editable here, so it just reflects the campaign's current brand).
+  let currentBrandSlug = '';
+
+  function updateSlugPreview() {
+    const slug = document.getElementById('slug').value.trim().toLowerCase();
+    const el = document.getElementById('slugPreview');
+    if (!slug || !currentBrandSlug) {
+      el.innerHTML = '';
+      return;
+    }
+    const url = `${location.origin}/c/${currentBrandSlug}/${slug}`;
+    el.innerHTML = `כתובת ציבורית: <a href="${url}" target="_blank" rel="noopener">${escapeHtml(url)}</a>`;
+  }
+
   async function reload() {
     const campaign = await api(`/api/campaigns/${id}`);
     document.getElementById('pageTitle').textContent = `עריכת קמפיין: ${campaign.name}`;
     document.getElementById('pageSubtitle').textContent = campaign.brand_name;
     await loadBrandOptions(campaign.brand_id);
     document.getElementById('name').value = campaign.name || '';
+    currentBrandSlug = campaign.brand_slug || '';
+    document.getElementById('slug').value = campaign.slug || '';
+    updateSlugPreview();
     document.getElementById('description').value = campaign.description || '';
+    updateDescriptionPreview();
     document.getElementById('budget').value = campaign.budget ?? '';
     document.getElementById('status').value = campaign.status;
     document.getElementById('startDate').value = campaign.start_date || '';
     document.getElementById('endDate').value = campaign.end_date || '';
     renderBanner(campaign);
     await renderTemplates(campaign.template);
+    document.getElementById('giftMode').value = campaign.gift_mode || 'none';
+    await Promise.all([renderGiftsSection(), renderProductsSection()]);
+    await renderActiveTrailSection(campaign);
     return campaign;
   }
+
+  document.getElementById('slug').addEventListener('input', updateSlugPreview);
 
   document.getElementById('campaignForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
       brand_id: Number(document.getElementById('brandId').value),
       name: document.getElementById('name').value.trim(),
+      slug: document.getElementById('slug').value.trim().toLowerCase(),
       description: document.getElementById('description').value.trim() || null,
       budget: document.getElementById('budget').value ? Number(document.getElementById('budget').value) : null,
       status: document.getElementById('status').value,
@@ -427,15 +1614,19 @@
     };
     try {
       await api(`/api/campaigns/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+      await reload();
+      await loadActivityLog();
       showMsg('formMsg', 'נשמר בהצלחה', 'success');
     } catch (error) {
       showMsg('formMsg', error.message, 'error');
     }
   });
 
+  initDescriptionEditor();
+
   initAuth().then((ok) => {
     if (!ok) return;
-    Promise.all([reload(), loadRegistrations()]).catch((error) => {
+    Promise.all([reload(), loadRegistrations(), renderFieldsSection(), loadActivityLog()]).catch((error) => {
       document.body.innerHTML = `<main><p>שגיאה בטעינת הקמפיין: ${escapeHtml(error.message)}</p></main>`;
     });
   });

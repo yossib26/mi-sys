@@ -6,18 +6,22 @@
 <title>ניהול קמפיינים</title>
 <style>
   :root {
-    --bg: #fbfbfc;
+    --navy: #33475b;
+    --bg: #f5f8fa;
     --card: #ffffff;
-    --border: #f0f1f4;
-    --border-strong: #e6e7eb;
-    --text: #2c2e33;
-    --muted: #9a9ea8;
-    --accent: #4361ee;
-    --accent-soft: #f0f3ff;
+    --border: #e5e8ec;
+    --border-strong: #cbd6e2;
+    --text: #33475b;
+    --muted: #7c98b6;
+    --accent: #0091ae;
+    --accent-soft: #eaf7f8;
+    --brand: #ff7a59;
+    --brand-dark: #e66e50;
     --accent-text: #ffffff;
     --danger: #e0455a;
     --danger-soft: #fdeef0;
-    --radius: 16px;
+    --radius: 4px;
+    --radius-lg: 8px;
   }
   /* Always light — not tied to the OS/browser color scheme. */
   * { box-sizing: border-box; }
@@ -26,19 +30,39 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
-    padding: 40px 24px;
     -webkit-font-smoothing: antialiased;
   }
-  h1 { font-size: 1.45rem; font-weight: 600; margin: 0 0 6px; letter-spacing: -0.01em; }
-  p.subtitle { color: var(--muted); margin: 0 0 28px; font-size: 0.9rem; }
-  main { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  .topnav {
+    background: var(--navy); color: #fff; display: flex; align-items: center;
+    gap: 20px; padding: 0 24px; height: 56px;
+  }
+  .topnav-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1rem; color: #fff; white-space: nowrap; }
+  .topnav-brand .mark {
+    width: 28px; height: 28px; border-radius: 6px; background: var(--brand);
+    display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; color: #fff;
+  }
+  .topnav-links { display: flex; align-items: center; gap: 2px; flex: 1; }
+  .topnav-links a {
+    color: #cbd6e2; text-decoration: none; font-size: 0.86rem; font-weight: 500;
+    padding: 8px 12px; border-radius: var(--radius); transition: background 0.15s ease, color 0.15s ease;
+  }
+  .topnav-links a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+  .topnav-links a.active { color: #fff; background: rgba(255, 255, 255, 0.14); }
+  .topnav-user { display: flex; align-items: center; gap: 12px; font-size: 0.82rem; color: #cbd6e2; white-space: nowrap; }
+  .topnav-user .topnav-user-name { color: #fff; font-weight: 600; }
+  .topnav-user a { color: #cbd6e2; text-decoration: none; }
+  .topnav-user a:hover { color: #fff; }
+  h1 { font-size: 1.65rem; font-weight: 500; margin: 0 0 4px; letter-spacing: -0.01em; color: var(--navy); }
+  p.subtitle { color: var(--muted); margin: 0; font-size: 0.88rem; }
+  main { max-width: 1200px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 20px; }
+  .page-head { padding-bottom: 20px; border-bottom: 1px solid var(--border-strong); margin-bottom: 4px; }
   section.card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     padding: 24px 26px;
   }
-  section.card h2 { margin: 0 0 18px; font-size: 1rem; font-weight: 600; }
+  section.card h2 { margin: 0 0 18px; font-size: 1rem; font-weight: 600; color: var(--navy); }
   form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 18px; }
   .field { display: flex; flex-direction: column; gap: 5px; }
   .field label { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
@@ -46,7 +70,7 @@
     font: inherit;
     padding: 9px 11px;
     border: 1px solid var(--border-strong);
-    border-radius: 10px;
+    border-radius: var(--radius);
     background: var(--bg);
     color: var(--text);
     min-width: 0;
@@ -61,43 +85,43 @@
     font-weight: 600;
     padding: 9px 18px;
     border: none;
-    border-radius: 10px;
-    background: var(--accent);
+    border-radius: var(--radius);
+    background: var(--brand);
     color: var(--accent-text);
     cursor: pointer;
-    transition: filter 0.15s ease, background 0.15s ease;
+    transition: background 0.15s ease;
   }
-  button:hover { filter: brightness(1.06); }
+  button:hover { background: var(--brand-dark); }
   button.ghost {
     background: transparent;
     border: 1px solid var(--border-strong);
-    color: var(--text);
+    color: var(--navy);
     font-weight: 500;
     padding: 6px 12px;
     font-size: 0.85rem;
   }
-  button.ghost:hover { background: var(--bg); filter: none; }
+  button.ghost:hover { background: var(--bg); }
   button.danger { background: var(--danger-soft); color: var(--danger); }
-  button.danger:hover { filter: none; background: var(--danger); color: #fff; }
+  button.danger:hover { background: var(--danger); color: #fff; }
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
   th, td { text-align: right; padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
   th {
-    color: var(--muted); font-weight: 600; font-size: 0.72rem;
+    background: var(--bg); color: var(--muted); font-weight: 600; font-size: 0.72rem;
     text-transform: uppercase; letter-spacing: 0.04em;
   }
   th[data-sort] { cursor: pointer; -webkit-user-select: none; user-select: none; white-space: nowrap; }
-  th[data-sort]:hover { color: var(--text); }
+  th[data-sort]:hover { color: var(--navy); }
   th[data-sort] .arrow { display: inline-block; width: 1em; opacity: 0.7; }
   .pagination { display: flex; align-items: center; gap: 12px; justify-content: center; margin-top: 18px; font-size: 0.85rem; color: var(--muted); }
   .pagination button {
-    padding: 6px 14px; font-size: 0.85rem; font-weight: 500; background: transparent;
-    border: 1px solid var(--border-strong); color: var(--text);
+    padding: 6px 14px; font-size: 0.85rem; font-weight: 500; background: var(--card);
+    border: 1px solid var(--border-strong); color: var(--navy); border-radius: var(--radius);
   }
-  .pagination button:hover { background: var(--bg); }
+  .pagination button:hover:not(:disabled) { background: var(--bg); }
   .pagination button:disabled { opacity: 0.4; cursor: default; background: none; }
   .page-size-label { display: flex; align-items: center; gap: 6px; }
   .page-size-label select {
-    padding: 5px 8px; font-size: 0.85rem; border-radius: 8px;
+    padding: 5px 8px; font-size: 0.85rem; border-radius: var(--radius);
     border: 1px solid var(--border-strong); background: var(--card); color: var(--text);
   }
   tbody tr { transition: background 0.1s ease; }
@@ -121,8 +145,8 @@
   .icon-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 30px; height: 30px; padding: 0;
-    border: 1px solid var(--border-strong); border-radius: 8px;
-    background: transparent; color: var(--text); text-decoration: none;
+    border: 1px solid var(--border-strong); border-radius: var(--radius);
+    background: transparent; color: var(--navy); text-decoration: none;
     cursor: pointer; transition: background 0.15s ease;
   }
   .icon-btn:hover { background: var(--bg); }
@@ -135,20 +159,23 @@
   .field-wide { flex: 1 1 200px; }
   .filter-field { margin-bottom: 14px; max-width: 240px; }
   .filter-row { display: flex; gap: 14px; flex-wrap: wrap; }
-  .top-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
-  .user-info { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--muted); }
-  .user-info a { color: var(--text); text-decoration: none; border: 1px solid var(--border-strong); border-radius: 10px; padding: 6px 12px; }
-  .user-info a:hover { background: var(--bg); }
+  .avatar {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%; color: #fff;
+    font-size: 0.72rem; font-weight: 700; margin-inline-end: 8px; flex: none; vertical-align: middle;
+  }
 </style>
 </head>
 <body>
+<header class="topnav">
+  <div class="topnav-brand"><span class="mark">MS</span> מערכת קמפיינים</div>
+  <nav class="topnav-links" id="topnavLinks"></nav>
+  <div class="topnav-user" id="userInfo"></div>
+</header>
 <main>
-  <div class="top-bar">
-    <div>
-      <h1>ניהול קמפיינים למותגים</h1>
-      <p class="subtitle">מחובר ל-Neon PostgreSQL · <span id="dbStatus">בודק חיבור…</span></p>
-    </div>
-    <div class="user-info" id="userInfo"></div>
+  <div class="page-head">
+    <h1>ניהול קמפיינים למותגים</h1>
+    <p class="subtitle">מחובר ל-Neon PostgreSQL · <span id="dbStatus">בודק חיבור…</span></p>
   </div>
 
   <section class="card">
@@ -247,6 +274,50 @@
   const ICON_DUPLICATE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
   const ICON_ARCHIVE = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V8"/><path d="M10 13h4"/></svg>';
   const ICON_PREVIEW = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const ICON_DASHBOARD = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>';
+
+  // Shared across index/edit/users/brands.html (each page keeps its own
+  // copy — this app has no build step to share JS across static pages).
+  // Populates the navy top bar: the nav links (gated to admin-only
+  // pages the same way each page already gates itself) and the
+  // logged-in user's name/role/logout link.
+  const TOPNAV_LINKS = [
+    { href: '/', label: 'קמפיינים', adminOnly: false },
+    { href: '/users.html', label: 'משתמשים', adminOnly: true },
+    { href: '/brands.html', label: 'מותגים', adminOnly: true },
+  ];
+  const AVATAR_COLORS = ['#0091ae', '#33475b', '#ff7a59', '#00a4bd', '#7c98b6', '#516f90'];
+  function avatarColor(str) {
+    let h = 0;
+    for (let i = 0; i < String(str).length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+    return AVATAR_COLORS[h % AVATAR_COLORS.length];
+  }
+  function avatarHtml(name) {
+    const initial = (name || '?').trim().charAt(0).toUpperCase() || '?';
+    return `<span class="avatar" style="background:${avatarColor(name || '')}">${escapeHtml(initial)}</span>`;
+  }
+  function renderTopnav(user) {
+    const navEl = document.getElementById('topnavLinks');
+    if (navEl) {
+      navEl.innerHTML = TOPNAV_LINKS
+        .filter((l) => !l.adminOnly || user.role === 'admin')
+        .map((l) => {
+          const isActive = location.pathname === l.href || (l.href === '/' && location.pathname === '/index.html');
+          return `<a href="${l.href}" class="${isActive ? 'active' : ''}">${l.label}</a>`;
+        })
+        .join('');
+    }
+    document.getElementById('userInfo').innerHTML = `
+      <span class="topnav-user-name">${escapeHtml(user.username)}</span>
+      <span>${user.role === 'admin' ? 'אדמין' : 'משתמש רגיל'}</span>
+      <a href="#" id="logoutLink">התנתקות</a>
+    `;
+    document.getElementById('logoutLink').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch('/api/auth/logout', { method: 'POST' });
+      location.href = '/login.html';
+    });
+  }
 
   async function initAuth() {
     const res = await fetch('/api/auth/me');
@@ -255,21 +326,37 @@
       return false;
     }
     currentUser = await res.json();
-    document.getElementById('userInfo').innerHTML = `
-      <span>${escapeHtml(currentUser.username)} · ${currentUser.role === 'admin' ? 'אדמין' : 'משתמש רגיל'}</span>
-      ${currentUser.role === 'admin' ? '<a href="/brands.html">ניהול מותגים</a>' : ''}
-      ${currentUser.role === 'admin' ? '<a href="/users.html">ניהול משתמשים</a>' : ''}
-      <a href="#" id="logoutLink">התנתקות</a>
-    `;
+    renderTopnav(currentUser);
     if (currentUser.role !== 'admin') {
       document.getElementById('filterStatusArchivedOption').remove();
     }
-    document.getElementById('logoutLink').addEventListener('click', async (e) => {
-      e.preventDefault();
-      await fetch('/api/auth/logout', { method: 'POST' });
-      location.href = '/login.html';
-    });
+    startSessionWatchdog();
     return true;
+  }
+
+  // Session now uses an IDLE timeout (10 minutes, see SESSION_TTL_MS
+  // in lib/auth.js), not a fixed lifetime from login: any real
+  // activity on this page (mouse/keyboard/scroll/click) keeps the
+  // session alive by re-minting the cookie via POST /api/auth/refresh
+  // roughly every 30s; once idle that long, it logs out and sends the
+  // admin back to the login screen proactively, not just on their
+  // next click.
+  const IDLE_TIMEOUT_MS = 10 * 60 * 1000;
+  let lastActivityAt = Date.now();
+  ['mousedown', 'mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach((evt) => {
+    document.addEventListener(evt, () => { lastActivityAt = Date.now(); }, { passive: true });
+  });
+
+  function startSessionWatchdog() {
+    setInterval(async () => {
+      if (Date.now() - lastActivityAt >= IDLE_TIMEOUT_MS) {
+        await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+        location.href = '/login.html';
+        return;
+      }
+      const res = await fetch('/api/auth/refresh', { method: 'POST' });
+      if (!res.ok) location.href = '/login.html';
+    }, 30 * 1000);
   }
 
   function escapeHtml(value) {
@@ -423,7 +510,7 @@
     rowsEl.innerHTML = campaigns.map((c) => `
       <tr>
         <td>${escapeHtml(c.brand_name)}</td>
-        <td>${escapeHtml(c.name)}</td>
+        <td>${avatarHtml(c.name)}${escapeHtml(c.name)}</td>
         <td>${formatDate(c.start_date)}</td>
         <td>${formatDate(c.end_date)}</td>
         <td>
@@ -440,6 +527,7 @@
           ` : '-'}
         </td>
         <td class="row-actions">
+          <a class="icon-btn" href="/dashboard.html?id=${c.id}" title="לוח בקרה">${ICON_DASHBOARD}</a>
           <a class="icon-btn" href="/edit.html?id=${c.id}" title="ערוך">${ICON_EDIT}</a>
           <button class="icon-btn" data-duplicate-campaign="${c.id}" title="שכפל">${ICON_DUPLICATE}</button>
           ${c.status !== 'archived' && currentUser && currentUser.role === 'admin' ? `<button class="icon-btn danger" data-delete-campaign="${c.id}" title="ארכב">${ICON_ARCHIVE}</button>` : ''}

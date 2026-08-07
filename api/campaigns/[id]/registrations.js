@@ -17,7 +17,7 @@ module.exports = async (req, res) => {
       const brandScope = await users.getBrandScope(pool, user);
       return respond(res, await handlers.listRegistrations(pool, id, brandScope));
     }
-    res.status(405).json({ error: 'method not allowed' });
+    res.status(405).json({ error: 'שיטת בקשה לא נתמכת' });
   } catch (error) {
     handleError(res, error);
   }

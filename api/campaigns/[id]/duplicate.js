@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
   try {
     const user = auth.requireAuth(req);
     if (req.method !== 'POST') {
-      res.status(405).json({ error: 'method not allowed' });
+      res.status(405).json({ error: 'שיטת בקשה לא נתמכת' });
       return;
     }
     const brandScope = await users.getBrandScope(pool, user);

@@ -28,6 +28,7 @@ const staticPages = {
   '/login.html': 'login.html',
   '/users.html': 'users.html',
   '/brands.html': 'brands.html',
+  '/dashboard.html': 'dashboard.html',
 };
 const htmlCache = Object.fromEntries(
   [...new Set(Object.values(staticPages))].map((file) => [file, fs.readFileSync(path.join(__dirname, file))])
@@ -50,7 +51,7 @@ function readJsonBody(req) {
       body += chunk;
       if (body.length > 6e6) { // banner images arrive as base64 JSON, ~4-5MB
         req.destroy();
-        reject(new Error('Request body too large'));
+        reject(handlers.httpError(413, 'גוף הבקשה גדול מדי'));
       }
     });
     req.on('end', () => {
@@ -58,7 +59,7 @@ function readJsonBody(req) {
       try {
         resolve(JSON.parse(body));
       } catch {
-        reject(handlers.httpError(400, 'Invalid JSON body'));
+        reject(handlers.httpError(400, 'גוף הבקשה אינו JSON תקין'));
       }
     });
     req.on('error', reject);
@@ -78,6 +79,10 @@ const routes = [
   } },
   { method: 'POST', pattern: /^\/api\/auth\/logout$/, handler: () => ({ status: 204, body: null, headers: { 'Set-Cookie': auth.buildLogoutCookie() } }) },
   { method: 'GET', pattern: /^\/api\/auth\/me$/, auth: 'user', handler: (_req, _m, _q, user) => ({ status: 200, body: user }) },
+  // Called by the admin pages' idle-activity watchdog roughly every
+  // 30s while there's been real activity — re-mints the session
+  // cookie with a fresh 10-minute expiry (SESSION_TTL_MS).
+  { method: 'POST', pattern: /^\/api\/auth\/refresh$/, auth: 'user', handler: (_req, _m, _q, user) => ({ status: 200, body: user, headers: { 'Set-Cookie': auth.buildSessionCookie(user) } }) },
 
   { method: 'GET', pattern: /^\/api\/users$/, auth: 'admin', handler: () => users.listUsers(pool) },
   { method: 'POST', pattern: /^\/api\/users$/, auth: 'admin', handler: async (req) => users.createUser(pool, await readJsonBody(req)) },
@@ -101,16 +106,43 @@ const routes = [
     // Archiving via a plain status edit would bypass the admin-only
     // archive flow — only the DELETE route (also admin-gated) may set it.
     if (body.status === 'archived' && user.role !== 'admin') {
-      throw auth.httpError(403, 'only an admin can archive a campaign');
+      throw auth.httpError(403, 'רק מנהל יכול להעביר קמפיין לארכיון');
     }
-    return handlers.updateCampaign(pool, id, body, await users.getBrandScope(pool, user));
+    return handlers.updateCampaign(pool, id, body, await users.getBrandScope(pool, user), user);
   } },
   { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)$/, auth: 'admin', handler: (_req, [id]) => handlers.deleteCampaign(pool, id) },
-  { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/banner$/, auth: 'user', handler: async (req, [id], _q, user) => handlers.setCampaignBanner(pool, id, await readJsonBody(req), await users.getBrandScope(pool, user)) },
-  { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/banner$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.deleteCampaignBanner(pool, id, await users.getBrandScope(pool, user)) },
+  { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/activity-log$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.listCampaignActivityLog(pool, id, await users.getBrandScope(pool, user)) },
+  { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/banner$/, auth: 'user', handler: async (req, [id], _q, user) => handlers.setCampaignBanner(pool, id, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
+  { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/banner$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.deleteCampaignBanner(pool, id, await users.getBrandScope(pool, user), user) },
   { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/registrations$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.listRegistrations(pool, id, await users.getBrandScope(pool, user)) },
   { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/registrations$/, handler: async (req, [id]) => handlers.createRegistration(pool, id, await readJsonBody(req)) },
   { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/form-start$/, handler: (_req, [id]) => handlers.recordCampaignFormStart(pool, id) },
+
+  // Dynamic registration-form fields for a campaign.
+  { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/fields$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.listCampaignFields(pool, id, await users.getBrandScope(pool, user)) },
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/fields$/, auth: 'user', handler: async (req, [id], _q, user) => handlers.createCampaignField(pool, id, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
+  { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/fields\/(\d+)$/, auth: 'user', handler: async (req, [id, fieldId], _q, user) => handlers.updateCampaignField(pool, id, fieldId, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
+  { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/fields\/(\d+)$/, auth: 'user', handler: async (_req, [id, fieldId], _q, user) => handlers.deleteCampaignField(pool, id, fieldId, await users.getBrandScope(pool, user), user) },
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/fields\/(\d+)\/move$/, auth: 'user', handler: async (req, [id, fieldId], _q, user) => handlers.moveCampaignField(pool, id, fieldId, (await readJsonBody(req)).direction, await users.getBrandScope(pool, user), user) },
+
+  // Gift-choice campaigns: a campaign's own list of gifts.
+  { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/gifts$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.listCampaignGifts(pool, id, await users.getBrandScope(pool, user)) },
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/gifts$/, auth: 'user', handler: async (req, [id], _q, user) => handlers.createCampaignGift(pool, id, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
+  { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/gifts\/(\d+)$/, auth: 'user', handler: async (req, [id, giftId], _q, user) => handlers.updateCampaignGift(pool, id, giftId, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
+  { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/gifts\/(\d+)$/, auth: 'user', handler: async (_req, [id, giftId], _q, user) => handlers.deleteCampaignGift(pool, id, giftId, await users.getBrandScope(pool, user), user) },
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/gifts\/(\d+)\/move$/, auth: 'user', handler: async (req, [id, giftId], _q, user) => handlers.moveCampaignGift(pool, id, giftId, (await readJsonBody(req)).direction, await users.getBrandScope(pool, user), user) },
+  { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/gifts\/(\d+)\/image$/, auth: 'user', handler: async (req, [id, giftId], _q, user) => handlers.setCampaignGiftImage(pool, id, giftId, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
+  { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/gifts\/(\d+)\/image$/, auth: 'user', handler: async (_req, [id, giftId], _q, user) => handlers.deleteCampaignGiftImage(pool, id, giftId, await users.getBrandScope(pool, user), user) },
+
+  // 'product_and_gift' campaigns: a campaign's own list of products
+  // (independent of, and alongside, its gift list above).
+  { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/products$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.listCampaignProducts(pool, id, await users.getBrandScope(pool, user)) },
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/products$/, auth: 'user', handler: async (req, [id], _q, user) => handlers.createCampaignProduct(pool, id, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
+  { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/products\/(\d+)$/, auth: 'user', handler: async (req, [id, productId], _q, user) => handlers.updateCampaignProduct(pool, id, productId, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
+  { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/products\/(\d+)$/, auth: 'user', handler: async (_req, [id, productId], _q, user) => handlers.deleteCampaignProduct(pool, id, productId, await users.getBrandScope(pool, user), user) },
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/products\/(\d+)\/move$/, auth: 'user', handler: async (req, [id, productId], _q, user) => handlers.moveCampaignProduct(pool, id, productId, (await readJsonBody(req)).direction, await users.getBrandScope(pool, user), user) },
+  { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/products\/(\d+)\/image$/, auth: 'user', handler: async (req, [id, productId], _q, user) => handlers.setCampaignProductImage(pool, id, productId, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
+  { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/products\/(\d+)\/image$/, auth: 'user', handler: async (_req, [id, productId], _q, user) => handlers.deleteCampaignProductImage(pool, id, productId, await users.getBrandScope(pool, user), user) },
 ];
 
 const server = http.createServer(async (req, res) => {
@@ -154,6 +186,33 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // Public — same reasoning as the banner: a gift's photo has to
+    // render on the unauthenticated public campaign page.
+    const giftImageMatch = req.method === 'GET' && url.pathname.match(/^\/api\/campaigns\/\d+\/gifts\/(\d+)\/image$/);
+    if (giftImageMatch) {
+      try {
+        const { mime, buffer } = await handlers.getCampaignGiftImage(pool, giftImageMatch[1]);
+        res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=3600' });
+        res.end(buffer);
+      } catch (error) {
+        sendJson(res, error.statusCode || 500, { error: error.message });
+      }
+      return;
+    }
+
+    // Public — same reasoning as the gift photo above.
+    const productImageMatch = req.method === 'GET' && url.pathname.match(/^\/api\/campaigns\/\d+\/products\/(\d+)\/image$/);
+    if (productImageMatch) {
+      try {
+        const { mime, buffer } = await handlers.getCampaignProductImage(pool, productImageMatch[1]);
+        res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=3600' });
+        res.end(buffer);
+      } catch (error) {
+        sendJson(res, error.statusCode || 500, { error: error.message });
+      }
+      return;
+    }
+
     // Admin/user only — registrant invoices carry PII, unlike the banner.
     const invoiceMatch = req.method === 'GET' && url.pathname.match(/^\/api\/registrations\/(\d+)\/invoice$/);
     if (invoiceMatch) {
@@ -164,6 +223,25 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(200, {
           'Content-Type': mime,
           'Content-Disposition': `inline; filename="${(filename || 'invoice').replace(/"/g, '')}"`,
+        });
+        res.end(buffer);
+      } catch (error) {
+        sendJson(res, error.statusCode || 500, { error: error.message });
+      }
+      return;
+    }
+
+    // Admin/user only — same PII rationale as the invoice route above,
+    // but for a per-registration upload against a dynamic 'file' field.
+    const fieldFileMatch = req.method === 'GET' && url.pathname.match(/^\/api\/registrations\/(\d+)\/fields\/(\d+)\/file$/);
+    if (fieldFileMatch) {
+      try {
+        const user = auth.requireAuth(req);
+        const brandScope = await users.getBrandScope(pool, user);
+        const { mime, buffer, filename } = await handlers.getRegistrationFieldFile(pool, fieldFileMatch[1], fieldFileMatch[2], brandScope);
+        res.writeHead(200, {
+          'Content-Type': mime,
+          'Content-Disposition': `inline; filename="${(filename || 'file').replace(/"/g, '')}"`,
         });
         res.end(buffer);
       } catch (error) {
@@ -184,7 +262,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    sendJson(res, 404, { error: 'not found' });
+    sendJson(res, 404, { error: 'הנתיב לא נמצא' });
   } catch (error) {
     const status = error.statusCode || 500;
     if (status === 500) console.error(error);

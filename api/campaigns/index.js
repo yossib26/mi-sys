@@ -10,7 +10,7 @@ module.exports = async (req, res) => {
     const brandScope = await users.getBrandScope(pool, user);
     if (req.method === 'GET') return respond(res, await handlers.listCampaigns(pool, req.query, brandScope));
     if (req.method === 'POST') return respond(res, await handlers.createCampaign(pool, req.body, brandScope));
-    res.status(405).json({ error: 'method not allowed' });
+    res.status(405).json({ error: 'שיטת בקשה לא נתמכת' });
   } catch (error) {
     handleError(res, error);
   }

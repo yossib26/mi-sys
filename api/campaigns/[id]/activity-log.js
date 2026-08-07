@@ -2,7 +2,7 @@ const pool = require('../../../lib/db');
 const handlers = require('../../../lib/handlers');
 const users = require('../../../lib/users');
 const auth = require('../../../lib/auth');
-const { handleError } = require('../../../lib/vercel-response');
+const { respond, handleError } = require('../../../lib/vercel-response');
 
 module.exports = async (req, res) => {
   try {
@@ -10,15 +10,10 @@ module.exports = async (req, res) => {
       res.status(405).json({ error: 'שיטת בקשה לא נתמכת' });
       return;
     }
-    // Registrant invoices carry PII — unlike the campaign banner,
-    // this is not part of the public page.
+    const { id } = req.query;
     const user = auth.requireAuth(req);
     const brandScope = await users.getBrandScope(pool, user);
-    const { id } = req.query;
-    const { mime, buffer, filename } = await handlers.getRegistrationInvoice(pool, id, brandScope);
-    res.setHeader('Content-Type', mime);
-    res.setHeader('Content-Disposition', `inline; filename="${(filename || 'invoice').replace(/"/g, '')}"`);
-    res.status(200).send(buffer);
+    return respond(res, await handlers.listCampaignActivityLog(pool, id, brandScope));
   } catch (error) {
     handleError(res, error);
   }

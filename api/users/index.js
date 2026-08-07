@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
     auth.requireAdmin(req);
     if (req.method === 'GET') return respond(res, await users.listUsers(pool));
     if (req.method === 'POST') return respond(res, await users.createUser(pool, req.body));
-    res.status(405).json({ error: 'method not allowed' });
+    res.status(405).json({ error: 'שיטת בקשה לא נתמכת' });
   } catch (error) {
     handleError(res, error);
   }

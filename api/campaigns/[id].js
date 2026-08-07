@@ -23,11 +23,11 @@ module.exports = async (req, res) => {
       // Archiving via a plain status edit would bypass the admin-only
       // archive flow above — only that route may set 'archived'.
       if (req.body && req.body.status === 'archived' && user.role !== 'admin') {
-        throw auth.httpError(403, 'only an admin can archive a campaign');
+        throw auth.httpError(403, 'רק מנהל יכול להעביר קמפיין לארכיון');
       }
-      return respond(res, await handlers.updateCampaign(pool, id, req.body, brandScope));
+      return respond(res, await handlers.updateCampaign(pool, id, req.body, brandScope, user));
     }
-    res.status(405).json({ error: 'method not allowed' });
+    res.status(405).json({ error: 'שיטת בקשה לא נתמכת' });
   } catch (error) {
     handleError(res, error);
   }

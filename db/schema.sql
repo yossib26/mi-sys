@@ -110,6 +110,205 @@ CREATE TABLE IF NOT EXISTS registrations (
 
 CREATE INDEX IF NOT EXISTS idx_registrations_campaign_id ON registrations (campaign_id);
 
+-- Per-campaign custom form fields: lets each campaign's public
+-- registration form carry extra questions beyond the fixed set above
+-- (name/email/invoice/consent), defined dynamically by whoever edits
+-- the campaign. 'options' holds type-specific config:
+--   - select:             { "values": ["a", "b", ...] }
+--   - text/date/checkbox/file: unused (null) — a date field always
+--     renders/stores as dd/mm/yy, a checkbox's adjacent label text is
+--     just its own `label` column, text has no extra config, and a
+--     file field's 1MB size cap is a fixed rule (see lib/handlers.js),
+--     not a per-field setting.
+CREATE TABLE IF NOT EXISTS campaign_fields (
+  id SERIAL PRIMARY KEY,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('text', 'date', 'select', 'checkbox')),
+  label TEXT NOT NULL,
+  required BOOLEAN NOT NULL DEFAULT false,
+  options JSONB,
+  position INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_campaign_fields_campaign_id ON campaign_fields (campaign_id);
+
+-- Field types grown over time: 'file' (a per-registration upload,
+-- capped at 1MB — see lib/handlers.js, stored separately rather than
+-- inline in custom_fields), then 'email'/'phone' (validated in
+-- lib/handlers.js — EMAIL_PATTERN / isValidPhone — not at the DB
+-- level). Kept as a single DROP+ADD rather than one pair per addition:
+-- with real rows already using the newer types, an intermediate
+-- ADD CONSTRAINT that doesn't yet include them would itself fail.
+ALTER TABLE campaign_fields DROP CONSTRAINT IF EXISTS campaign_fields_type_check;
+ALTER TABLE campaign_fields ADD CONSTRAINT campaign_fields_type_check
+  CHECK (type IN ('text', 'email', 'phone', 'date', 'select', 'checkbox', 'file'));
+
+-- A 'text' field's character limit (default 200, see
+-- DEFAULT_TEXT_FIELD_MAX_LENGTH in lib/handlers.js) now lives in
+-- `options`, same slot 'select' uses for its value list. Backfill it
+-- onto existing text fields predating this so every text field's
+-- `options` is consistently non-null and callers never need a
+-- fallback for old rows.
+UPDATE campaign_fields SET options = '{"max_length": 200}'::jsonb
+  WHERE type = 'text' AND options IS NULL;
+
+-- Answers to a campaign's dynamic fields, keyed by campaign_fields.id
+-- (as a string, since JSON object keys are always strings): { "3":
+-- "some value", "5": true, ... }. Kept separate from the fixed
+-- columns above so existing registrants/queries are unaffected. For a
+-- 'file' field this holds only the original filename — the bytes
+-- live in registration_field_files below (kept out of this JSONB
+-- blob, same reason the invoice/banner blobs get their own columns).
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS custom_fields JSONB NOT NULL DEFAULT '{}'::jsonb;
+
+-- One uploaded file per (registration, file-type field). Excluded
+-- from ordinary registration SELECTs — fetched only via its own
+-- route, same pattern as registrations.invoice.
+CREATE TABLE IF NOT EXISTS registration_field_files (
+  id SERIAL PRIMARY KEY,
+  registration_id INTEGER NOT NULL REFERENCES registrations(id) ON DELETE CASCADE,
+  field_id INTEGER NOT NULL REFERENCES campaign_fields(id) ON DELETE CASCADE,
+  file BYTEA NOT NULL,
+  file_mime TEXT NOT NULL,
+  file_filename TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (registration_id, field_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_registration_field_files_registration_id ON registration_field_files (registration_id);
+
+-- The public form no longer always shows first/last name + invoice —
+-- a campaign's registration form is now driven entirely by its own
+-- campaign_fields, and those four were forcing themselves onto every
+-- campaign even when the admin defined their own equivalents (see
+-- lib/campaign-page.js). Old rows keep whatever they already have;
+-- new registrations for a campaign with no matching dynamic fields
+-- just won't populate these.
+ALTER TABLE registrations ALTER COLUMN first_name DROP NOT NULL;
+ALTER TABLE registrations ALTER COLUMN last_name DROP NOT NULL;
+ALTER TABLE registrations ALTER COLUMN invoice DROP NOT NULL;
+ALTER TABLE registrations ALTER COLUMN invoice_mime DROP NOT NULL;
+
+-- 'fixed_key' marks a campaign_field as one of a small set of built-in
+-- fields that exist on every campaign automatically (see
+-- ensureMarketingConsentField in lib/handlers.js), rather than being
+-- freely added/removed by whoever edits the campaign. Only its label
+-- (the text next to the checkbox) is editable — type/required/deletion/
+-- reordering are all pinned in code — and it always renders last on
+-- the public page regardless of `position` (see the "fixed_key IS NOT
+-- NULL" ordering wherever campaign_fields is queried for display).
+ALTER TABLE campaign_fields ADD COLUMN IF NOT EXISTS fixed_key TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_campaign_fields_fixed_key
+  ON campaign_fields (campaign_id, fixed_key) WHERE fixed_key IS NOT NULL;
+
+-- Backfill: every existing campaign gets the marketing-consent
+-- checkbox if it doesn't already have one (new campaigns get it at
+-- creation time instead — see createCampaign).
+INSERT INTO campaign_fields (campaign_id, type, label, required, options, position, fixed_key)
+SELECT c.id, 'checkbox', 'אני מאשר דיוור וקבלת חומר פרסומי', false, NULL, 0, 'marketing_consent'
+FROM campaigns c
+WHERE NOT EXISTS (
+  SELECT 1 FROM campaign_fields cf WHERE cf.campaign_id = c.id AND cf.fixed_key = 'marketing_consent'
+);
+
+-- Optional ActiveTrail (email marketing) sync, configured entirely per
+-- campaign (not a shared server-wide credential): activetrail_token is
+-- that campaign's own ActiveTrail API token, activetrail_group_id is
+-- which of their groups new registrants get added to, and
+-- activetrail_email_field_id is which of the campaign's own dynamic
+-- fields supplies the contact's email address. All three unset (the
+-- default) = sync disabled for this campaign — see
+-- maybeSyncRegistrationToActiveTrail in lib/handlers.js.
+-- activetrail_token is a secret: never returned by the API (see
+-- has_activetrail_token in CAMPAIGN_COLUMNS), only ever written.
+-- ON DELETE SET NULL: deleting the designated field just turns sync
+-- off for the campaign rather than erroring.
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS activetrail_token TEXT;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS activetrail_group_id TEXT;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS activetrail_email_field_id INTEGER
+  REFERENCES campaign_fields(id) ON DELETE SET NULL;
+
+-- Gift-choice campaigns: alongside its dynamic campaign_fields, a
+-- campaign can offer an unlimited list of gifts (SKU + name + image)
+-- for the registrant to pick one from. 'none' (the default) is every
+-- campaign that predates this and every campaign that doesn't use it —
+-- unchanged behavior. Defined per campaign, same as campaign_fields,
+-- not a shared catalog.
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS gift_mode TEXT NOT NULL DEFAULT 'none';
+-- The gift_mode check constraint is defined once, further down (after
+-- all its values have been introduced) — see the note there on why
+-- it's a single DROP+ADD rather than one pair per value added over
+-- time: with real rows already using a newer value, an intermediate
+-- ADD CONSTRAINT that doesn't yet include it would itself fail (hit
+-- this exact bug with campaign_fields_type_check earlier — see git
+-- history — and designed around it here from the start).
+
+CREATE TABLE IF NOT EXISTS campaign_gifts (
+  id SERIAL PRIMARY KEY,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  sku TEXT,
+  name TEXT NOT NULL,
+  image BYTEA,
+  image_mime TEXT,
+  position INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_campaign_gifts_campaign_id ON campaign_gifts (campaign_id);
+
+-- Which gift a registrant picked. name/sku are a snapshot taken at
+-- registration time (not a live join) so editing or deleting a gift
+-- later never rewrites what was actually promised to a past
+-- registrant — ON DELETE SET NULL, not CASCADE, for the same reason.
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS selected_gift_id INTEGER
+  REFERENCES campaign_gifts(id) ON DELETE SET NULL;
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS selected_gift_name TEXT;
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS selected_gift_sku TEXT;
+
+-- 'product_and_gift' added as a third gift_mode: the registrant picks
+-- which product they bought (campaign_products — SKU+name+image, same
+-- shape as campaign_gifts) *and*, independently/unrelated to that
+-- choice, a gift from the campaign's gift list (the same
+-- campaign_gifts used by 'simple_choice' — no filtering by product).
+
+CREATE TABLE IF NOT EXISTS campaign_products (
+  id SERIAL PRIMARY KEY,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  sku TEXT,
+  name TEXT NOT NULL,
+  image BYTEA,
+  image_mime TEXT,
+  position INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_campaign_products_campaign_id ON campaign_products (campaign_id);
+
+-- Which product a registrant picked — same snapshot rationale as the
+-- gift columns above.
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS selected_product_id INTEGER
+  REFERENCES campaign_products(id) ON DELETE SET NULL;
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS selected_product_name TEXT;
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS selected_product_sku TEXT;
+
+-- 'product_then_gift' added as a 4th gift_mode: like 'product_and_gift',
+-- the registrant picks a product and a gift, but here the gift list is
+-- *filtered* to whichever gifts were assigned to that specific product
+-- (campaign_gifts.product_id) — unlike 'product_and_gift', where the
+-- two picks are unrelated. ON DELETE CASCADE (not SET NULL, unlike the
+-- registrations.selected_*_id columns): a gift assigned to a product
+-- only makes sense in that product's context, so deleting the product
+-- takes its gifts with it — this is config-time cleanup, not a
+-- historical record like a registration's snapshot.
+ALTER TABLE campaigns DROP CONSTRAINT IF EXISTS campaigns_gift_mode_check;
+ALTER TABLE campaigns ADD CONSTRAINT campaigns_gift_mode_check
+  CHECK (gift_mode IN ('none', 'simple_choice', 'product_and_gift', 'product_then_gift'));
+
+ALTER TABLE campaign_gifts ADD COLUMN IF NOT EXISTS product_id INTEGER
+  REFERENCES campaign_products(id) ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_campaign_gifts_product_id ON campaign_gifts (product_id);
+
 -- Keep updated_at current on every campaign update
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
@@ -124,3 +323,26 @@ CREATE TRIGGER trg_campaigns_updated_at
   BEFORE UPDATE ON campaigns
   FOR EACH ROW
   EXECUTE FUNCTION set_updated_at();
+
+-- Audit trail for edits made to an *existing* campaign through the
+-- admin editor (details/banner/template/fields/gifts/products/
+-- ActiveTrail settings) — see logCampaignActivity in lib/handlers.js,
+-- called from each of those mutating handlers. Deliberately NOT
+-- written to by createCampaign or duplicateCampaign: those aren't
+-- "editing an existing campaign" (duplication's internal copy of
+-- fields/gifts/products onto the new campaign is a creation-time
+-- bulk-insert, not a series of user edits, and goes through raw SQL
+-- rather than the logged CRUD functions).
+-- user_id -> SET NULL (not CASCADE) so a log entry survives its
+-- author's account being deleted later; username is denormalized
+-- alongside it for the same reason getSelectedGift/Product snapshot
+-- their name — the log stays meaningful even after that.
+CREATE TABLE IF NOT EXISTS campaign_activity_log (
+  id SERIAL PRIMARY KEY,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  username TEXT,
+  action TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_campaign_activity_log_campaign_id ON campaign_activity_log (campaign_id, created_at DESC);

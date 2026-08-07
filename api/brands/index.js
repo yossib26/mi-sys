@@ -18,7 +18,7 @@ module.exports = async (req, res) => {
       auth.requireAdmin(req);
       return respond(res, await handlers.createBrand(pool, req.body));
     }
-    res.status(405).json({ error: 'method not allowed' });
+    res.status(405).json({ error: 'שיטת בקשה לא נתמכת' });
   } catch (error) {
     handleError(res, error);
   }

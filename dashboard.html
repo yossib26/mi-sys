@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>לוח בקרה</title>
+<style>
+  :root {
+    --navy: #33475b;
+    --bg: #f5f8fa;
+    --card: #ffffff;
+    --border: #e5e8ec;
+    --border-strong: #cbd6e2;
+    --text: #33475b;
+    --muted: #7c98b6;
+    --accent: #0091ae;
+    --accent-soft: #eaf7f8;
+    --brand: #ff7a59;
+    --brand-dark: #e66e50;
+    --accent-text: #ffffff;
+    --danger: #e0455a;
+    --danger-soft: #fdeef0;
+    --radius: 4px;
+    --radius-lg: 8px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); }
+  .topnav {
+    background: var(--navy); color: #fff; display: flex; align-items: center;
+    gap: 20px; padding: 0 24px; height: 56px;
+  }
+  .topnav-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1rem; color: #fff; white-space: nowrap; }
+  .topnav-brand .mark {
+    width: 28px; height: 28px; border-radius: 6px; background: var(--brand);
+    display: flex; align-items: center; justify-content: center; font-size: 0.78rem; font-weight: 700; color: #fff;
+  }
+  .topnav-links { display: flex; align-items: center; gap: 2px; flex: 1; }
+  .topnav-links a {
+    color: #cbd6e2; text-decoration: none; font-size: 0.86rem; font-weight: 500;
+    padding: 8px 12px; border-radius: var(--radius); transition: background 0.15s ease, color 0.15s ease;
+  }
+  .topnav-links a:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+  .topnav-links a.active { color: #fff; background: rgba(255, 255, 255, 0.14); }
+  .topnav-user { display: flex; align-items: center; gap: 12px; font-size: 0.82rem; color: #cbd6e2; white-space: nowrap; }
+  .topnav-user .topnav-user-name { color: #fff; font-weight: 600; }
+  .topnav-user a { color: #cbd6e2; text-decoration: none; }
+  .topnav-user a:hover { color: #fff; }
+  h1 { font-size: 1.55rem; font-weight: 500; margin: 0 0 4px; letter-spacing: -0.01em; color: var(--navy); }
+  p.subtitle { color: var(--muted); margin: 0; font-size: 0.9rem; }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 20px; }
+  .page-head { padding-bottom: 20px; border-bottom: 1px solid var(--border-strong); margin-bottom: 4px; }
+  .back-link { display: inline-block; margin-bottom: 4px; font-size: 0.9rem; }
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px 26px;
+  }
+  section.card h2 { margin: 0 0 4px; font-size: 1.05rem; font-weight: 600; color: var(--navy); }
+  section.card p.hint { margin: 0 0 18px; color: var(--muted); font-size: 0.85rem; }
+  .empty { color: var(--muted); font-style: italic; }
+
+  /* KPI cards */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+  .kpi-card { background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 16px; text-align: center; }
+  .kpi-card .kpi-value { font-size: 1.7rem; font-weight: 700; color: var(--navy); line-height: 1.2; }
+  .kpi-card .kpi-label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+  /* Horizontal bar charts (funnel, breakdowns) */
+  .chart-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .chart-bar-row:last-child { margin-bottom: 0; }
+  .chart-bar-label { width: 170px; flex: 0 0 auto; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chart-bar-track { flex: 1; background: var(--bg); border-radius: var(--radius); height: 20px; overflow: hidden; }
+  .chart-bar-fill { height: 100%; border-radius: var(--radius); background: var(--accent); transition: width 0.3s ease; }
+  .chart-bar-value { width: 46px; flex: 0 0 auto; text-align: left; font-size: 0.85rem; font-weight: 600; color: var(--navy); }
+
+  /* Vertical time-series chart */
+  .time-chart-wrap { overflow-x: auto; padding-bottom: 4px; }
+  .time-chart { display: flex; align-items: flex-end; gap: 8px; height: 180px; min-width: min-content; }
+  .time-chart-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 34px; flex: 0 0 auto; height: 100%; }
+  .time-chart-value { font-size: 0.68rem; color: var(--muted); margin-bottom: 3px; }
+  .time-chart-bar { width: 18px; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; }
+  .time-chart-label { font-size: 0.65rem; color: var(--muted); margin-top: 6px; white-space: nowrap; }
+
+  .sub-chart { margin-bottom: 22px; }
+  .sub-chart:last-child { margin-bottom: 0; }
+  .sub-chart-title { font-size: 0.85rem; font-weight: 600; margin: 0 0 10px; color: var(--navy); }
+
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .charts-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header class="topnav">
+  <div class="topnav-brand"><span class="mark">MS</span> מערכת קמפיינים</div>
+  <nav class="topnav-links" id="topnavLinks"></nav>
+  <div class="topnav-user" id="userInfo"></div>
+</header>
+<main>
+  <div class="page-head">
+    <a class="back-link" id="backLink" href="/">← חזרה לעריכת הקמפיין</a>
+    <h1 id="pageTitle">לוח בקרה</h1>
+    <p class="subtitle" id="pageSubtitle"></p>
+  </div>
+
+  <section class="card">
+    <h2>סיכום</h2>
+    <p class="hint">מבט־על על הביצועים של הקמפיין.</p>
+    <div class="kpi-grid" id="kpiGrid"><p class="empty">טוען…</p></div>
+  </section>
+
+  <section class="card">
+    <h2>משפך המרה</h2>
+    <p class="hint">כמה מתוך מי שצפו בדף בפועל התחילו למלא והשלימו הרשמה.</p>
+    <div id="funnelChart"><p class="empty">טוען…</p></div>
+  </section>
+
+  <section class="card">
+    <h2>נרשמים לאורך זמן</h2>
+    <p class="hint">מספר ההרשמות שהושלמו בכל יום.</p>
+    <div class="time-chart-wrap"><div id="timeChart"><p class="empty">טוען…</p></div></div>
+  </section>
+
+  <section class="card charts-grid" id="selectionBreakdownCard" style="display:none">
+    <div id="giftBreakdown" style="display:none">
+      <h2>התפלגות מתנות שנבחרו</h2>
+      <div id="giftChart"></div>
+    </div>
+    <div id="productBreakdown" style="display:none">
+      <h2>התפלגות מוצרים שנבחרו</h2>
+      <div id="productChart"></div>
+    </div>
+  </section>
+
+  <section class="card" id="fieldsBreakdownCard" style="display:none">
+    <h2>התפלגות שדות בטופס</h2>
+    <p class="hint">איך הנרשמים ענו על שדות בחירה וצ'קבוקס בטופס.</p>
+    <div id="fieldsCharts"></div>
+  </section>
+</main>
+
+<script>
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) {
+    document.body.innerHTML = '<main><p>חסר מזהה קמפיין (id) בכתובת.</p></main>';
+    throw new Error('missing id');
+  }
+  document.getElementById('backLink').href = `/edit.html?id=${id}`;
+
+  function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
+  // Shared across index/edit/users/brands/dashboard.html (each page
+  // keeps its own copy — this app has no build step to share JS across
+  // static pages). Populates the navy top bar: the nav links (gated to
+  // admin-only pages the same way each page already gates itself) and
+  // the logged-in user's name/role/logout link.
+  const TOPNAV_LINKS = [
+    { href: '/', label: 'קמפיינים', adminOnly: false },
+    { href: '/users.html', label: 'משתמשים', adminOnly: true },
+    { href: '/brands.html', label: 'מותגים', adminOnly: true },
+  ];
+  function renderTopnav(user) {
+    const navEl = document.getElementById('topnavLinks');
+    if (navEl) {
+      navEl.innerHTML = TOPNAV_LINKS
+        .filter((l) => !l.adminOnly || user.role === 'admin')
+        .map((l) => {
+          const isActive = location.pathname === l.href || (l.href === '/' && location.pathname === '/index.html');
+          return `<a href="${l.href}" class="${isActive ? 'active' : ''}">${l.label}</a>`;
+        })
+        .join('');
+    }
+    document.getElementById('userInfo').innerHTML = `
+      <span class="topnav-user-name">${escapeHtml(user.username)}</span>
+      <span>${user.role === 'admin' ? 'אדמין' : 'משתמש רגיל'}</span>
+      <a href="#" id="logoutLink">התנתקות</a>
+    `;
+    document.getElementById('logoutLink').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch('/api/auth/logout', { method: 'POST' });
+      location.href = '/login.html';
+    });
+  }
+
+  // Session now uses an IDLE timeout (10 minutes, see SESSION_TTL_MS
+  // in lib/auth.js), not a fixed lifetime from login: any real
+  // activity on this page (mouse/keyboard/scroll/click) keeps the
+  // session alive by re-minting the cookie via POST /api/auth/refresh
+  // roughly every 30s; once idle that long, it logs out and sends the
+  // admin back to the login screen proactively, not just on their
+  // next click.
+  const IDLE_TIMEOUT_MS = 10 * 60 * 1000;
+  let lastActivityAt = Date.now();
+  ['mousedown', 'mousemove', 'keydown', 'scroll', 'click', 'touchstart'].forEach((evt) => {
+    document.addEventListener(evt, () => { lastActivityAt = Date.now(); }, { passive: true });
+  });
+
+  function startSessionWatchdog() {
+    setInterval(async () => {
+      if (Date.now() - lastActivityAt >= IDLE_TIMEOUT_MS) {
+        await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+        location.href = '/login.html';
+        return;
+      }
+      const res = await fetch('/api/auth/refresh', { method: 'POST' });
+      if (!res.ok) location.href = '/login.html';
+    }, 30 * 1000);
+  }
+
+  async function api(path, options) {
+    const res = await fetch(path, {
+      ...options,
+      headers: { 'Content-Type': 'application/json', ...(options && options.headers) },
+    });
+    let data = null;
+    if (res.status !== 204) data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error((data && data.error) || `שגיאה (${res.status})`);
+    return data;
+  }
+
+  // ----- Chart rendering helpers (plain CSS/HTML — no charting library,
+  // consistent with the rest of this app's zero-dependency approach) -----
+
+  function renderKpi(value, label) {
+    return `<div class="kpi-card"><div class="kpi-value">${escapeHtml(value)}</div><div class="kpi-label">${escapeHtml(label)}</div></div>`;
+  }
+
+  // items: [{ label, value, color? }]
+  function renderBarList(container, items) {
+    if (items.length === 0) {
+      container.innerHTML = '<p class="empty">אין נתונים עדיין.</p>';
+      return;
+    }
+    const max = Math.max(1, ...items.map((it) => it.value));
+    container.innerHTML = items.map((it) => `
+      <div class="chart-bar-row">
+        <div class="chart-bar-label" title="${escapeHtml(it.label)}">${escapeHtml(it.label)}</div>
+        <div class="chart-bar-track">
+          <div class="chart-bar-fill" style="width:${Math.round((it.value / max) * 100)}%; ${it.color ? `background:${it.color};` : ''}"></div>
+        </div>
+        <div class="chart-bar-value">${it.value}</div>
+      </div>
+    `).join('');
+  }
+
+  // points: [{ label, value }] — rendered as a horizontally-scrollable
+  // row of vertical bars (see .time-chart-wrap's overflow-x in the CSS).
+  function renderTimeChart(container, points) {
+    if (points.length === 0) {
+      container.innerHTML = '<p class="empty">אין נרשמים עדיין.</p>';
+      return;
+    }
+    const max = Math.max(1, ...points.map((p) => p.value));
+    container.innerHTML = `
+      <div class="time-chart">
+        ${points.map((p) => `
+          <div class="time-chart-col" title="${escapeHtml(p.label)}: ${p.value}">
+            <div class="time-chart-value">${p.value}</div>
+            <div class="time-chart-bar" style="height:${Math.max(2, Math.round((p.value / max) * 100))}%"></div>
+            <div class="time-chart-label">${escapeHtml(p.label)}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function formatDay(date) {
+    return date.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' });
+  }
+
+  const FIELD_TYPE_LABELS = {
+    text: 'טקסט', email: 'דואר אלקטרוני', phone: 'מספר טלפון', date: 'תאריך',
+    select: 'בחירה מרשימה', checkbox: "צ'קבוקס", file: 'העלאת קובץ',
+  };
+
+  async function load() {
+    const [campaign, fields, registrations] = await Promise.all([
+      api(`/api/campaigns/${id}`),
+      api(`/api/campaigns/${id}/fields`),
+      api(`/api/campaigns/${id}/registrations`),
+    ]);
+
+    document.getElementById('pageTitle').textContent = `לוח בקרה: ${campaign.name}`;
+    document.getElementById('pageSubtitle').textContent = campaign.brand_name;
+
+    const views = campaign.views_count ?? 0;
+    const starts = campaign.form_starts_count ?? 0;
+    const regs = registrations.length;
+
+    // "Uploaded a file" = has a non-empty value on at least one
+    // file-type field. "Confirmed marketing consent" = the fixed
+    // checkbox every campaign gets automatically (see
+    // ensureMarketingConsentField in lib/handlers.js) — defensively
+    // handled as absent (older data / edge cases) rather than assumed.
+    const fileFieldIds = fields.filter((f) => f.type === 'file').map((f) => f.id);
+    const consentField = fields.find((f) => f.fixed_key === 'marketing_consent');
+    const uploaders = fileFieldIds.length
+      ? registrations.filter((r) => fileFieldIds.some((fid) => r.custom_fields && r.custom_fields[fid])).length
+      : 0;
+    const consented = consentField
+      ? registrations.filter((r) => r.custom_fields && r.custom_fields[consentField.id] === true).length
+      : 0;
+
+    const kpiGrid = document.getElementById('kpiGrid');
+    const kpis = [
+      renderKpi(views, 'צפיות בדף'),
+      renderKpi(starts, 'התחילו למלא'),
+      renderKpi(regs, 'נרשמו בפועל'),
+      renderKpi(views > 0 ? `${Math.round((regs / views) * 100)}%` : '-', 'יחס המרה מצפייה'),
+    ];
+    if (fileFieldIds.length) kpis.push(renderKpi(uploaders, 'העלו קובץ'));
+    if (consentField) kpis.push(renderKpi(regs > 0 ? `${Math.round((consented / regs) * 100)}%` : '-', 'אישרו דיוור'));
+    kpiGrid.innerHTML = kpis.join('');
+
+    renderBarList(document.getElementById('funnelChart'), [
+      { label: 'צפיות בדף', value: views, color: '#7c98b6' },
+      { label: 'התחילו למלא', value: starts, color: '#0091ae' },
+      { label: 'נרשמו בפועל', value: regs, color: '#ff7a59' },
+    ]);
+
+    // Group completed registrations by calendar day.
+    const dayBuckets = new Map();
+    registrations.forEach((r) => {
+      const d = new Date(r.created_at);
+      const key = d.toISOString().slice(0, 10);
+      dayBuckets.set(key, { date: d, count: (dayBuckets.get(key)?.count || 0) + 1 });
+    });
+    const dayPoints = Array.from(dayBuckets.values())
+      .sort((a, b) => a.date - b.date)
+      .map((b) => ({ label: formatDay(b.date), value: b.count }));
+    renderTimeChart(document.getElementById('timeChart'), dayPoints);
+
+    // Gift/product selection breakdown — only meaningful for a
+    // gift-choice campaign (see gift_mode), and only shown once there's
+    // at least one registration that actually picked something.
+    const giftCounts = new Map();
+    const productCounts = new Map();
+    registrations.forEach((r) => {
+      if (r.selected_gift_name) giftCounts.set(r.selected_gift_name, (giftCounts.get(r.selected_gift_name) || 0) + 1);
+      if (r.selected_product_name) productCounts.set(r.selected_product_name, (productCounts.get(r.selected_product_name) || 0) + 1);
+    });
+    const giftItems = Array.from(giftCounts.entries()).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+    const productItems = Array.from(productCounts.entries()).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+    if (giftItems.length || productItems.length) {
+      document.getElementById('selectionBreakdownCard').style.display = '';
+      if (giftItems.length) {
+        document.getElementById('giftBreakdown').style.display = '';
+        renderBarList(document.getElementById('giftChart'), giftItems);
+      }
+      if (productItems.length) {
+        document.getElementById('productBreakdown').style.display = '';
+        renderBarList(document.getElementById('productChart'), productItems);
+      }
+    }
+
+    // Per-field breakdown for 'select' and 'checkbox' custom fields
+    // (free-text/date/email/phone/file values aren't meaningfully
+    // "breakdownable" into a bar chart). A select field's full defined
+    // value list is shown even where a value got zero picks; a
+    // checkbox is always just כן/לא.
+    const breakdownFields = fields.filter((f) => (f.type === 'select' || f.type === 'checkbox') && !f.fixed_key);
+    if (breakdownFields.length) {
+      document.getElementById('fieldsBreakdownCard').style.display = '';
+      const wrap = document.getElementById('fieldsCharts');
+      wrap.innerHTML = breakdownFields.map((f) => `
+        <div class="sub-chart">
+          <p class="sub-chart-title">${escapeHtml(f.label)} <span class="empty">(${FIELD_TYPE_LABELS[f.type]})</span></p>
+          <div id="fieldChart-${f.id}"></div>
+        </div>
+      `).join('');
+      breakdownFields.forEach((f) => {
+        const counts = new Map();
+        if (f.type === 'checkbox') {
+          counts.set('כן', 0);
+          counts.set('לא', 0);
+        } else {
+          ((f.options && f.options.values) || []).forEach((v) => counts.set(v, 0));
+        }
+        registrations.forEach((r) => {
+          const raw = r.custom_fields ? r.custom_fields[f.id] : undefined;
+          const key = f.type === 'checkbox' ? (raw ? 'כן' : 'לא') : raw;
+          if (key === undefined || key === null || key === '') return;
+          counts.set(key, (counts.get(key) || 0) + 1);
+        });
+        const items = Array.from(counts.entries()).map(([label, value]) => ({ label, value }));
+        renderBarList(document.getElementById(`fieldChart-${f.id}`), items);
+      });
+    }
+  }
+
+  (async () => {
+    const res = await fetch('/api/auth/me');
+    if (!res.ok) {
+      location.href = '/login.html';
+      return;
+    }
+    renderTopnav(await res.json());
+    startSessionWatchdog();
+    try {
+      await load();
+    } catch (error) {
+      document.querySelector('main').insertAdjacentHTML(
+        'beforeend',
+        `<p class="empty">שגיאה בטעינת לוח הבקרה: ${escapeHtml(error.message)}</p>`
+      );
+    }
+  })();
+</script>
+</body>
+</html>

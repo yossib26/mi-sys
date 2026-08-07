@@ -9,7 +9,7 @@ module.exports = async (req, res) => {
     const { id } = req.query;
     if (req.method === 'PUT') return respond(res, await users.updateUser(pool, id, req.body));
     if (req.method === 'DELETE') return respond(res, await users.deleteUser(pool, id, currentUser.id));
-    res.status(405).json({ error: 'method not allowed' });
+    res.status(405).json({ error: 'שיטת בקשה לא נתמכת' });
   } catch (error) {
     handleError(res, error);
   }
