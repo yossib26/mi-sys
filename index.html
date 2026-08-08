@@ -162,6 +162,15 @@
   .table-wrap { overflow-x: auto; }
   .field-wide { flex: 1 1 200px; }
   .filter-field { margin-bottom: 14px; max-width: 240px; }
+  .select-col { width: 32px; }
+  .select-col input, .select-campaign-checkbox { width: 16px; height: 16px; cursor: pointer; margin: 0; }
+  .bulk-toolbar {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+    padding: 10px 14px; background: var(--accent-soft); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg); font-size: 0.85rem; color: var(--navy);
+  }
+  .bulk-toolbar[hidden] { display: none; }
+  .bulk-toolbar button { margin-inline-start: auto; }
   .filter-row { display: flex; gap: 14px; flex-wrap: wrap; }
   .avatar {
     display: inline-flex; align-items: center; justify-content: center;
@@ -231,7 +240,7 @@
         <select id="filterStatus">
           <option value="">כל הסטטוסים</option>
           <option value="draft">טיוטה</option>
-          <option value="active">פעיל</option>
+          <option value="active" selected>פעיל</option>
           <option value="paused">מושהה</option>
           <option value="completed">הושלם</option>
           <option value="cancelled">בוטל</option>
@@ -240,10 +249,16 @@
       </div>
     </div>
 
+    <div class="bulk-toolbar" id="bulkToolbar" hidden>
+      <span id="bulkSelectedCount"></span>
+      <button type="button" class="danger" id="bulkDeleteBtn">העבר לארכיון את הנבחרים</button>
+    </div>
+
     <div class="table-wrap">
       <table>
         <thead>
           <tr id="campaignHeaderRow">
+            <th class="select-col" id="selectAllHeaderCell"><input type="checkbox" id="selectAllCampaigns" title="בחר הכל" /></th>
             <th data-sort="brand_name">מותג</th>
             <th data-sort="name">שם</th>
             <th data-sort="start_date">התחלה</th>
@@ -339,9 +354,39 @@
     renderTopnav(currentUser);
     if (currentUser.role !== 'admin') {
       document.getElementById('filterStatusArchivedOption').remove();
+      document.getElementById('selectAllHeaderCell').remove();
     }
     startSessionWatchdog();
     return true;
+  }
+
+  function colCount() {
+    return currentUser && currentUser.role === 'admin' ? 11 : 10;
+  }
+
+  // Bulk-select state for the admin-only "archive selected" action —
+  // deliberately page-local: cleared on every loadCampaigns() (new
+  // page/filter/sort/status-change) rather than persisted across
+  // pages, so "select all" only ever means "everything on screen".
+  let selectedCampaignIds = new Set();
+
+  function updateBulkToolbar() {
+    const toolbar = document.getElementById('bulkToolbar');
+    if (selectedCampaignIds.size === 0) {
+      toolbar.hidden = true;
+      return;
+    }
+    toolbar.hidden = false;
+    document.getElementById('bulkSelectedCount').textContent = `${selectedCampaignIds.size} קמפיינים נבחרו`;
+  }
+
+  function syncSelectAllCheckbox() {
+    const selectAll = document.getElementById('selectAllCampaigns');
+    if (!selectAll) return;
+    const rowCheckboxes = [...document.querySelectorAll('#campaignRows [data-select-campaign]')];
+    const checkedCount = rowCheckboxes.filter((cb) => cb.checked).length;
+    selectAll.checked = rowCheckboxes.length > 0 && checkedCount === rowCheckboxes.length;
+    selectAll.indeterminate = checkedCount > 0 && checkedCount < rowCheckboxes.length;
   }
 
   // Session now uses an IDLE timeout (10 minutes, see SESSION_TTL_MS
@@ -494,11 +539,17 @@
     if (brandId) params.set('brand_id', brandId);
     if (status) params.set('status', status);
 
+    // A fresh load always means a different/reordered set of rows on
+    // screen, so any previous bulk selection is stale — clear it
+    // rather than risk archiving a row the admin can no longer see.
+    selectedCampaignIds.clear();
+    updateBulkToolbar();
+
     let result;
     try {
       result = await api('/api/campaigns?' + params.toString());
     } catch (error) {
-      rowsEl.innerHTML = `<tr><td colspan="10" class="empty">${escapeHtml(error.message)}</td></tr>`;
+      rowsEl.innerHTML = `<tr><td colspan="${colCount()}" class="empty">${escapeHtml(error.message)}</td></tr>`;
       document.getElementById('pagination').innerHTML = '';
       return;
     }
@@ -513,12 +564,14 @@
     const campaigns = result.rows;
 
     if (campaigns.length === 0) {
-      rowsEl.innerHTML = '<tr><td colspan="10" class="empty">אין עדיין קמפיינים.</td></tr>';
+      rowsEl.innerHTML = `<tr><td colspan="${colCount()}" class="empty">אין עדיין קמפיינים.</td></tr>`;
       return;
     }
 
+    const isAdmin = currentUser && currentUser.role === 'admin';
     rowsEl.innerHTML = campaigns.map((c) => `
       <tr>
+        ${isAdmin ? `<td class="select-col">${c.status !== 'archived' ? `<input type="checkbox" class="select-campaign-checkbox" data-select-campaign="${c.id}" />` : ''}</td>` : ''}
         <td>${escapeHtml(c.brand_name)}</td>
         <td>${avatarHtml(c.name)}${escapeHtml(c.name)}</td>
         <td>${formatDate(c.start_date)}</td>
@@ -544,6 +597,7 @@
         </td>
       </tr>
     `).join('');
+    syncSelectAllCheckbox();
   }
 
   // The "create campaign" fields are hidden by default and only shown
@@ -589,6 +643,16 @@
   });
 
   document.getElementById('campaignRows').addEventListener('change', async (e) => {
+    const selectCheckbox = e.target.closest('[data-select-campaign]');
+    if (selectCheckbox) {
+      const cid = Number(selectCheckbox.getAttribute('data-select-campaign'));
+      if (selectCheckbox.checked) selectedCampaignIds.add(cid);
+      else selectedCampaignIds.delete(cid);
+      updateBulkToolbar();
+      syncSelectAllCheckbox();
+      return;
+    }
+
     const statusId = e.target.getAttribute('data-status-for');
     if (!statusId) return;
     try {
@@ -598,6 +662,35 @@
       showMsg('campaignMsg', error.message, true);
       await loadCampaigns();
     }
+  });
+
+  document.getElementById('selectAllCampaigns')?.addEventListener('change', (e) => {
+    const checked = e.target.checked;
+    document.querySelectorAll('#campaignRows [data-select-campaign]').forEach((cb) => {
+      cb.checked = checked;
+      const cid = Number(cb.getAttribute('data-select-campaign'));
+      if (checked) selectedCampaignIds.add(cid);
+      else selectedCampaignIds.delete(cid);
+    });
+    updateBulkToolbar();
+  });
+
+  document.getElementById('bulkDeleteBtn').addEventListener('click', async () => {
+    const ids = [...selectedCampaignIds];
+    if (ids.length === 0) return;
+    const typed = prompt(`הקמפיינים לא יימחקו — הם יועברו לארכיון (${ids.length} קמפיינים). להמשך, הקלד/י DELETE:`);
+    if (typed !== 'DELETE') return;
+    const btn = document.getElementById('bulkDeleteBtn');
+    btn.disabled = true;
+    const results = await Promise.allSettled(ids.map((cid) => api(`/api/campaigns/${cid}`, { method: 'DELETE' })));
+    btn.disabled = false;
+    const failedCount = results.filter((r) => r.status === 'rejected').length;
+    if (failedCount > 0) {
+      showMsg('campaignMsg', `${failedCount} מתוך ${ids.length} קמפיינים לא הועברו לארכיון בהצלחה`, true);
+    } else {
+      showMsg('campaignMsg', `${ids.length} קמפיינים הועברו לארכיון בהצלחה`, false);
+    }
+    await loadCampaigns();
   });
 
   document.getElementById('campaignRows').addEventListener('click', async (e) => {
