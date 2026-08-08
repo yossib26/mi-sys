@@ -128,8 +128,25 @@
   table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
   th, td { text-align: right; padding: 10px 8px; border-bottom: 1px solid var(--border); }
   th { background: var(--bg); color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  th[data-sort] { cursor: pointer; -webkit-user-select: none; user-select: none; white-space: nowrap; }
+  th[data-sort]:hover { color: var(--navy); }
+  th[data-sort] .arrow { display: inline-block; width: 1em; opacity: 0.7; }
   tbody tr:hover { background: var(--accent-soft); }
   .empty { color: var(--muted); font-style: italic; }
+  .registrants-toolbar { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .registrants-search { max-width: 280px; flex: 1 1 220px; }
+  .pagination { display: flex; align-items: center; gap: 12px; justify-content: center; margin-top: 18px; font-size: 0.85rem; color: var(--muted); }
+  .pagination button {
+    padding: 6px 14px; font-size: 0.85rem; font-weight: 500; background: var(--card);
+    border: 1px solid var(--border-strong); color: var(--navy); border-radius: var(--radius);
+  }
+  .pagination button:hover:not(:disabled) { background: var(--bg); }
+  .pagination button:disabled { opacity: 0.4; cursor: default; background: none; }
+  .page-size-label { display: flex; align-items: center; gap: 6px; }
+  .page-size-label select {
+    padding: 5px 8px; font-size: 0.85rem; border-radius: var(--radius);
+    border: 1px solid var(--border-strong); background: var(--card); color: var(--text);
+  }
   .yes { color: #2fa968; font-weight: 600; }
   .no { color: var(--muted); }
   .template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
@@ -145,13 +162,29 @@
   .template-option .default-tag { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 400; margin-top: 2px; }
 
   section.card p.subtitle { margin: -10px 0 16px; }
-  .field-row { border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 12px; }
-  .field-row-main { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .field-row-main .field-label-input { flex: 2; min-width: 140px; }
-  .field-row-main .field-type-select { flex: 1; min-width: 130px; }
-  .field-required-toggle { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; white-space: nowrap; }
+  .field-row { border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 10px 14px; margin-bottom: 10px; background: var(--card); transition: box-shadow 0.15s ease, opacity 0.15s ease; }
+  #fieldsList .field-row { cursor: grab; }
+  #fixedFieldsList:not(:empty) { margin-top: 10px; }
+  #fieldsList .field-row.dragging { opacity: 0.4; }
+  #fieldsList .field-row.drag-over-line { box-shadow: 0 -2px 0 0 var(--accent); }
+  /* Every control stays on one row — never wraps to a second line —
+     so a long fields list reads as a compact stack instead of a tall
+     one. If the card is ever too narrow for all of them at once, the
+     row scrolls horizontally rather than growing taller. */
+  .field-row-main { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; overflow-x: auto; }
+  .field-drag-handle {
+    flex: none; width: 16px; text-align: center; color: var(--muted); cursor: grab;
+    font-size: 1rem; line-height: 1; -webkit-user-select: none; user-select: none;
+  }
+  .field-drag-handle:hover { color: var(--navy); }
+  .field-row-main .field-label-input { flex: 2 1 0; min-width: 110px; }
+  .field-row-main .field-type-select { flex: 1 1 0; min-width: 92px; }
+  .field-required-toggle { flex: none; display: flex; align-items: center; gap: 5px; font-size: 0.82rem; white-space: nowrap; }
   .field-required-toggle input { width: auto; }
-  .field-row-actions { display: flex; gap: 6px; margin-inline-start: auto; }
+  .field-maxlength-inline { flex: none; align-items: center; gap: 5px; font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+  .field-maxlength-inline input { width: 62px; padding: 5px 6px; }
+  .field-row-actions { flex: none; display: flex; gap: 4px; margin-inline-start: auto; }
+  .field-row .icon-btn { width: 28px; height: 28px; }
   .field-row-extra { margin-top: 12px; }
   .field-row-extra label { font-size: 0.8rem; color: var(--muted); font-weight: 500; display: block; margin-bottom: 5px; }
   .field-hint { font-size: 0.78rem; color: var(--muted); margin: 10px 0 0; }
@@ -173,11 +206,15 @@
   .field-row-fixed { background: var(--bg); }
   .field-row-fixed .field-label-input { flex: 1; min-width: 220px; }
   .gift-sku-input { max-width: 130px; flex: 0 0 auto !important; }
-  .gift-image-row { margin-top: 10px; }
-  .gift-image-row .banner-preview { max-height: 80px; }
+  /* Image preview + upload/remove icons, inline in the gift/product row
+     itself — same one-line-per-row idea as .field-row-main above. */
+  .gift-image-inline { flex: none; display: flex; align-items: center; gap: 4px; }
+  .gift-thumb { width: 28px; height: 28px; object-fit: cover; border-radius: var(--radius); border: 1px solid var(--border-strong); display: block; flex: none; }
   .nested-gifts { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border-strong); }
   .nested-gifts .field-hint { margin-bottom: 8px; }
   .nested-gift-row { border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; background: var(--card); }
+  .nested-gift-row .icon-btn { width: 28px; height: 28px; }
+  .add-row-btn { margin-top: 4px; }
   .field-fixed-badge {
     font-size: 0.72rem; font-weight: 600; color: var(--muted); white-space: nowrap;
     border: 1px solid var(--border-strong); border-radius: 999px; padding: 4px 10px;
@@ -343,6 +380,12 @@
         <button type="button" class="ghost" id="exportRegistrationsBtn">📊 ייצוא לאקסל</button>
       </div>
     </div>
+    <div class="registrants-toolbar">
+      <div class="field registrants-search">
+        <label for="registrantsSearch">חיפוש נרשמים</label>
+        <input type="search" id="registrantsSearch" placeholder="חפש לפי כל שדה, מתנה או מוצר…" />
+      </div>
+    </div>
     <div class="table-wrap">
       <table>
         <thead>
@@ -355,18 +398,25 @@
         </tbody>
       </table>
     </div>
+    <div class="pagination" id="registrationsPagination"></div>
   </section>
 
   <section class="card">
     <h2>היסטוריית שינויים</h2>
     <p class="subtitle">רישום כל הפעולות שבוצעו בעריכת הקמפיין הזה — מי, מה ומתי.</p>
+    <div class="registrants-toolbar">
+      <div class="field registrants-search">
+        <label for="activityLogSearch">חיפוש בהיסטוריה</label>
+        <input type="search" id="activityLogSearch" placeholder="חפש לפי פעולה או שם משתמש…" />
+      </div>
+    </div>
     <div class="table-wrap">
       <table>
         <thead>
-          <tr>
-            <th>תאריך ושעה</th>
-            <th>משתמש</th>
-            <th>פעולה</th>
+          <tr id="activityLogHeaderRow">
+            <th data-sort="created_at">תאריך ושעה</th>
+            <th data-sort="username">משתמש</th>
+            <th data-sort="action">פעולה</th>
           </tr>
         </thead>
         <tbody id="activityLogRows">
@@ -374,6 +424,7 @@
         </tbody>
       </table>
     </div>
+    <div class="pagination" id="activityLogPagination"></div>
   </section>
 </main>
 
@@ -616,31 +667,29 @@
     }
   }
 
-  // Gift rows reuse the exact same row/icon-btn/upload-label markup and
-  // patterns as the dynamic-field manager (renderFieldRow/wireFieldRow)
-  // and the campaign banner (renderBanner) — just without a type
-  // selector, since a gift only ever has sku/name/image.
+  // Gift rows reuse the same one-line row/icon-btn pattern as the
+  // dynamic-field manager (renderFieldRow/wireFieldRow) — sku/name
+  // inputs, an inline image thumbnail with upload/remove icon buttons,
+  // and the up/down/delete icon trio, all on a single line.
   function renderGiftRow(gift, idx, total) {
     return `
       <div class="field-row" data-gift-id="${gift.id}">
         <div class="field-row-main">
           <input class="gift-sku-input" placeholder="מק״ט" value="${escapeHtml(gift.sku || '')}" />
           <input class="field-label-input gift-name-input" placeholder="שם המתנה" value="${escapeHtml(gift.name)}" />
+          <div class="gift-image-inline">
+            ${gift.has_image ? `<img class="gift-thumb" src="/api/campaigns/${id}/gifts/${gift.id}/image" alt="" />` : ''}
+            <label class="icon-btn" title="${gift.has_image ? 'החלף תמונה' : 'העלה תמונה'}">
+              🖼️
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="gift-image-input" hidden />
+            </label>
+            ${gift.has_image ? '<button type="button" class="icon-btn danger" data-action="remove-image" title="הסר תמונה">✕</button>' : ''}
+          </div>
           <div class="field-row-actions">
             <button type="button" class="icon-btn" data-action="up" ${idx === 0 ? 'disabled' : ''} title="הזז למעלה">↑</button>
             <button type="button" class="icon-btn" data-action="down" ${idx === total - 1 ? 'disabled' : ''} title="הזז למטה">↓</button>
             <button type="button" class="icon-btn danger" data-action="delete" title="מחק מתנה">🗑</button>
           </div>
-        </div>
-        <div class="file-row gift-image-row">
-          ${gift.has_image ? `
-            <img class="banner-preview" src="/api/campaigns/${id}/gifts/${gift.id}/image" alt="" />
-            <button type="button" class="ghost danger" data-action="remove-image">הסר תמונה</button>
-          ` : '<span class="file-info">אין תמונה עדיין.</span>'}
-          <label class="upload-label">
-            ${gift.has_image ? 'החלף תמונה' : 'העלה תמונה'}
-            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="gift-image-input" hidden />
-          </label>
         </div>
       </div>`;
   }
@@ -669,7 +718,11 @@
     skuInput.addEventListener('change', saveGift);
     nameInput.addEventListener('change', saveGift);
 
-    row.querySelectorAll('.icon-btn').forEach((btn) => {
+    // Scoped to .field-row-actions specifically (not every .icon-btn in
+    // the row) — the row also has an upload/remove-image icon button
+    // pair now that everything lives on one line, and those aren't
+    // up/down/delete actions.
+    row.querySelector('.field-row-actions').querySelectorAll('.icon-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const action = btn.getAttribute('data-action');
         if (action === 'delete') {
@@ -748,7 +801,7 @@
           ? '<p class="fields-empty">אין עדיין מתנות. הוסף מתנה כדי לאפשר בחירה בטופס הציבורי.</p>'
           : gifts.map((g, i) => renderGiftRow(g, i, gifts.length)).join('')}
       </div>
-      <button type="button" class="ghost" id="addGiftBtn">+ הוסף מתנה</button>
+      <button type="button" class="ghost add-row-btn" id="addGiftBtn">+ הוסף מתנה</button>
     `;
 
     section.querySelectorAll('.field-row').forEach((row) => wireGiftRow(row));
@@ -778,21 +831,19 @@
         <div class="field-row-main">
           <input class="gift-sku-input" placeholder="מק״ט" value="${escapeHtml(product.sku || '')}" />
           <input class="field-label-input gift-name-input" placeholder="שם המוצר" value="${escapeHtml(product.name)}" />
+          <div class="gift-image-inline">
+            ${product.has_image ? `<img class="gift-thumb" src="/api/campaigns/${id}/products/${product.id}/image" alt="" />` : ''}
+            <label class="icon-btn" title="${product.has_image ? 'החלף תמונה' : 'העלה תמונה'}">
+              🖼️
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="gift-image-input" hidden />
+            </label>
+            ${product.has_image ? '<button type="button" class="icon-btn danger" data-action="remove-image" title="הסר תמונה">✕</button>' : ''}
+          </div>
           <div class="field-row-actions">
             <button type="button" class="icon-btn" data-action="up" ${idx === 0 ? 'disabled' : ''} title="הזז למעלה">↑</button>
             <button type="button" class="icon-btn" data-action="down" ${idx === total - 1 ? 'disabled' : ''} title="הזז למטה">↓</button>
             <button type="button" class="icon-btn danger" data-action="delete" title="מחק מוצר">🗑</button>
           </div>
-        </div>
-        <div class="file-row gift-image-row">
-          ${product.has_image ? `
-            <img class="banner-preview" src="/api/campaigns/${id}/products/${product.id}/image" alt="" />
-            <button type="button" class="ghost danger" data-action="remove-image">הסר תמונה</button>
-          ` : '<span class="file-info">אין תמונה עדיין.</span>'}
-          <label class="upload-label">
-            ${product.has_image ? 'החלף תמונה' : 'העלה תמונה'}
-            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="gift-image-input" hidden />
-          </label>
         </div>
         ${nestedGifts !== null ? `
           <div class="nested-gifts">
@@ -802,7 +853,7 @@
                 ? '<p class="fields-empty">אין עדיין מתנות למוצר הזה.</p>'
                 : nestedGifts.map((g, gi) => renderNestedGiftRow(g, gi, nestedGifts.length)).join('')}
             </div>
-            <button type="button" class="ghost" data-action="add-nested-gift">+ הוסף מתנה למוצר זה</button>
+            <button type="button" class="ghost add-row-btn" data-action="add-nested-gift">+ הוסף מתנה למוצר זה</button>
           </div>
         ` : ''}
       </div>`;
@@ -817,21 +868,19 @@
         <div class="field-row-main">
           <input class="gift-sku-input" placeholder="מק״ט" value="${escapeHtml(gift.sku || '')}" />
           <input class="field-label-input gift-name-input" placeholder="שם המתנה" value="${escapeHtml(gift.name)}" />
+          <div class="gift-image-inline">
+            ${gift.has_image ? `<img class="gift-thumb" src="/api/campaigns/${id}/gifts/${gift.id}/image" alt="" />` : ''}
+            <label class="icon-btn" title="${gift.has_image ? 'החלף תמונה' : 'העלה תמונה'}">
+              🖼️
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="gift-image-input" hidden />
+            </label>
+            ${gift.has_image ? '<button type="button" class="icon-btn danger" data-action="remove-image" title="הסר תמונה">✕</button>' : ''}
+          </div>
           <div class="field-row-actions">
             <button type="button" class="icon-btn" data-action="up" ${idx === 0 ? 'disabled' : ''} title="הזז למעלה">↑</button>
             <button type="button" class="icon-btn" data-action="down" ${idx === total - 1 ? 'disabled' : ''} title="הזז למטה">↓</button>
             <button type="button" class="icon-btn danger" data-action="delete" title="מחק מתנה">🗑</button>
           </div>
-        </div>
-        <div class="file-row gift-image-row">
-          ${gift.has_image ? `
-            <img class="banner-preview" src="/api/campaigns/${id}/gifts/${gift.id}/image" alt="" />
-            <button type="button" class="ghost danger" data-action="remove-image">הסר תמונה</button>
-          ` : '<span class="file-info">אין תמונה עדיין.</span>'}
-          <label class="upload-label">
-            ${gift.has_image ? 'החלף תמונה' : 'העלה תמונה'}
-            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="gift-image-input" hidden />
-          </label>
         </div>
       </div>`;
   }
@@ -860,7 +909,9 @@
     skuInput.addEventListener('change', saveGift);
     nameInput.addEventListener('change', saveGift);
 
-    row.querySelectorAll('.icon-btn').forEach((btn) => {
+    // Scoped to .field-row-actions — the row also carries an
+    // upload/remove-image icon button pair now that it's all one line.
+    row.querySelector('.field-row-actions').querySelectorAll('.icon-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const action = btn.getAttribute('data-action');
         if (action === 'delete') {
@@ -941,12 +992,13 @@
     skuInput.addEventListener('change', saveProduct);
     nameInput.addEventListener('change', saveProduct);
 
-    // Scoped to the product's own control row specifically — a
-    // 'product_then_gift' row also contains nested gift rows with
-    // their own .icon-btn elements (wired separately, by
-    // wireNestedGiftRow), which a plain row.querySelectorAll('.icon-btn')
-    // would incorrectly also pick up.
-    row.querySelector('.field-row-main').querySelectorAll('.icon-btn').forEach((btn) => {
+    // Scoped to .field-row-actions specifically — a 'product_then_gift'
+    // row also contains its own upload/remove-image icon buttons (same
+    // row, now that it's all one line) plus nested gift rows with their
+    // own .icon-btn elements (wired separately, by wireNestedGiftRow),
+    // none of which a plain row.querySelectorAll('.icon-btn') should
+    // pick up here.
+    row.querySelector('.field-row-actions').querySelectorAll('.icon-btn').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const action = btn.getAttribute('data-action');
         if (action === 'delete') {
@@ -1055,7 +1107,7 @@
           ? '<p class="fields-empty">אין עדיין מוצרים. הוסף מוצר כדי לאפשר בחירה בטופס הציבורי.</p>'
           : products.map((p, i) => renderProductRow(p, i, products.length, giftsByProduct ? (giftsByProduct[p.id] || []) : null)).join('')}
       </div>
-      <button type="button" class="ghost" id="addProductBtn">+ הוסף מוצר</button>
+      <button type="button" class="ghost add-row-btn" id="addProductBtn">+ הוסף מוצר</button>
     `;
 
     section.querySelectorAll('.field-row').forEach((row) => wireProductRow(row));
@@ -1207,20 +1259,98 @@
 
   document.getElementById('exportRegistrationsBtn').addEventListener('click', exportRegistrationsToExcel);
 
+  const ACTIVITY_LOG_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+  const activityLogState = { page: 1, pageSize: 10, q: '', sort: 'created_at', order: 'desc' };
+
+  function renderActivityLogSortArrows() {
+    document.querySelectorAll('#activityLogHeaderRow th[data-sort]').forEach((th) => {
+      th.querySelectorAll('.arrow').forEach((a) => a.remove());
+      if (th.dataset.sort === activityLogState.sort) {
+        const arrow = document.createElement('span');
+        arrow.className = 'arrow';
+        arrow.textContent = activityLogState.order === 'asc' ? '▲' : '▼';
+        th.appendChild(arrow);
+      }
+    });
+  }
+
+  document.getElementById('activityLogHeaderRow').addEventListener('click', (e) => {
+    const th = e.target.closest('th[data-sort]');
+    if (!th) return;
+    const sortKey = th.dataset.sort;
+    if (activityLogState.sort === sortKey) {
+      activityLogState.order = activityLogState.order === 'asc' ? 'desc' : 'asc';
+    } else {
+      activityLogState.sort = sortKey;
+      activityLogState.order = 'asc';
+    }
+    activityLogState.page = 1;
+    loadActivityLog();
+  });
+
+  function renderActivityLogPagination(meta) {
+    const el = document.getElementById('activityLogPagination');
+    if (meta.total === 0) {
+      el.innerHTML = '';
+      return;
+    }
+    el.innerHTML = `
+      <button id="activityLogPrevPage" ${meta.page <= 1 ? 'disabled' : ''}>‹ הקודם</button>
+      <span>עמוד ${meta.page} מתוך ${meta.totalPages} (${meta.total} פעולות)</span>
+      <button id="activityLogNextPage" ${meta.page >= meta.totalPages ? 'disabled' : ''}>הבא ›</button>
+      <label class="page-size-label">
+        רשומות בעמוד:
+        <select id="activityLogPageSizeSelect">
+          ${ACTIVITY_LOG_PAGE_SIZE_OPTIONS.map((n) => `<option value="${n}" ${n === activityLogState.pageSize ? 'selected' : ''}>${n}</option>`).join('')}
+        </select>
+      </label>
+    `;
+    document.getElementById('activityLogPrevPage')?.addEventListener('click', () => {
+      activityLogState.page = Math.max(1, activityLogState.page - 1);
+      loadActivityLog();
+    });
+    document.getElementById('activityLogNextPage')?.addEventListener('click', () => {
+      activityLogState.page = Math.min(meta.totalPages, activityLogState.page + 1);
+      loadActivityLog();
+    });
+    document.getElementById('activityLogPageSizeSelect').addEventListener('change', (e) => {
+      activityLogState.pageSize = Number(e.target.value);
+      activityLogState.page = 1;
+      loadActivityLog();
+    });
+  }
+
   async function loadActivityLog() {
     const rowsEl = document.getElementById('activityLogRows');
+    const params = new URLSearchParams({
+      page: activityLogState.page,
+      pageSize: activityLogState.pageSize,
+      sort: activityLogState.sort,
+      order: activityLogState.order,
+    });
+    if (activityLogState.q) params.set('q', activityLogState.q);
     let log;
     try {
-      log = await api(`/api/campaigns/${id}/activity-log`);
+      log = await api(`/api/campaigns/${id}/activity-log?${params.toString()}`);
     } catch (error) {
       rowsEl.innerHTML = `<tr><td colspan="3" class="empty">${escapeHtml(error.message)}</td></tr>`;
+      document.getElementById('activityLogPagination').innerHTML = '';
       return;
     }
-    if (log.length === 0) {
-      rowsEl.innerHTML = '<tr><td colspan="3" class="empty">אין עדיין פעולות רשומות.</td></tr>';
+
+    if (log.total > 0 && activityLogState.page > log.totalPages) {
+      activityLogState.page = log.totalPages;
+      return loadActivityLog();
+    }
+
+    renderActivityLogSortArrows();
+    renderActivityLogPagination(log);
+
+    if (log.rows.length === 0) {
+      rowsEl.innerHTML = `<tr><td colspan="3" class="empty">${activityLogState.q ? 'לא נמצאו פעולות תואמות לחיפוש.' : 'אין עדיין פעולות רשומות.'}</td></tr>`;
       return;
     }
-    rowsEl.innerHTML = log.map((entry) => `
+    rowsEl.innerHTML = log.rows.map((entry) => `
       <tr>
         <td>${new Date(entry.created_at).toLocaleString('he-IL')}</td>
         <td>${escapeHtml(entry.username || 'לא ידוע')}</td>
@@ -1229,19 +1359,108 @@
     `).join('');
   }
 
+  let activityLogSearchDebounce = null;
+  document.getElementById('activityLogSearch').addEventListener('input', (e) => {
+    clearTimeout(activityLogSearchDebounce);
+    activityLogSearchDebounce = setTimeout(() => {
+      activityLogState.q = e.target.value.trim();
+      activityLogState.page = 1;
+      loadActivityLog();
+    }, 300);
+  });
+
+  // Registrants table state — pagination + free-text search. The
+  // Excel export (exportRegistrationsToExcel above) deliberately does
+  // NOT go through any of this: it calls the same endpoint without a
+  // `page` param, which always returns the campaign's *complete*
+  // registrant set regardless of whatever page/search is on screen.
+  const REGISTRANTS_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+  const registrantsState = { page: 1, pageSize: 25, q: '', sort: 'created_at', order: 'desc' };
+
+  function renderRegistrationsSortArrows() {
+    document.querySelectorAll('#registrationHeaderRow th[data-sort]').forEach((th) => {
+      th.querySelectorAll('.arrow').forEach((a) => a.remove());
+      if (th.dataset.sort === registrantsState.sort) {
+        const arrow = document.createElement('span');
+        arrow.className = 'arrow';
+        arrow.textContent = registrantsState.order === 'asc' ? '▲' : '▼';
+        th.appendChild(arrow);
+      }
+    });
+  }
+
+  document.getElementById('registrationHeaderRow').addEventListener('click', (e) => {
+    const th = e.target.closest('th[data-sort]');
+    if (!th) return;
+    const sortKey = th.dataset.sort;
+    if (registrantsState.sort === sortKey) {
+      registrantsState.order = registrantsState.order === 'asc' ? 'desc' : 'asc';
+    } else {
+      registrantsState.sort = sortKey;
+      registrantsState.order = 'asc';
+    }
+    registrantsState.page = 1;
+    loadRegistrations();
+  });
+
+  function renderRegistrationsPagination(meta) {
+    const el = document.getElementById('registrationsPagination');
+    if (meta.total === 0) {
+      el.innerHTML = '';
+      return;
+    }
+    el.innerHTML = `
+      <button id="registrantsPrevPage" ${meta.page <= 1 ? 'disabled' : ''}>‹ הקודם</button>
+      <span>עמוד ${meta.page} מתוך ${meta.totalPages} (${meta.total} נרשמים)</span>
+      <button id="registrantsNextPage" ${meta.page >= meta.totalPages ? 'disabled' : ''}>הבא ›</button>
+      <label class="page-size-label">
+        רשומות בעמוד:
+        <select id="registrantsPageSizeSelect">
+          ${REGISTRANTS_PAGE_SIZE_OPTIONS.map((n) => `<option value="${n}" ${n === registrantsState.pageSize ? 'selected' : ''}>${n}</option>`).join('')}
+        </select>
+      </label>
+    `;
+    document.getElementById('registrantsPrevPage')?.addEventListener('click', () => {
+      registrantsState.page = Math.max(1, registrantsState.page - 1);
+      loadRegistrations();
+    });
+    document.getElementById('registrantsNextPage')?.addEventListener('click', () => {
+      registrantsState.page = Math.min(meta.totalPages, registrantsState.page + 1);
+      loadRegistrations();
+    });
+    document.getElementById('registrantsPageSizeSelect').addEventListener('change', (e) => {
+      registrantsState.pageSize = Number(e.target.value);
+      registrantsState.page = 1;
+      loadRegistrations();
+    });
+  }
+
   async function loadRegistrations() {
     const rowsEl = document.getElementById('registrationRows');
     const headerEl = document.getElementById('registrationHeaderRow');
-    let registrations, fields, campaign;
+    let page, fields, campaign;
+    const params = new URLSearchParams({
+      page: registrantsState.page,
+      pageSize: registrantsState.pageSize,
+      sort: registrantsState.sort,
+      order: registrantsState.order,
+    });
+    if (registrantsState.q) params.set('q', registrantsState.q);
     try {
-      [registrations, fields, campaign] = await Promise.all([
-        api(`/api/campaigns/${id}/registrations`),
+      [page, fields, campaign] = await Promise.all([
+        api(`/api/campaigns/${id}/registrations?${params.toString()}`),
         api(`/api/campaigns/${id}/fields`),
         api(`/api/campaigns/${id}`),
       ]);
     } catch (error) {
       rowsEl.innerHTML = `<tr><td colspan="1" class="empty">${escapeHtml(error.message)}</td></tr>`;
+      document.getElementById('registrationsPagination').innerHTML = '';
       return;
+    }
+
+    if (page.total > 0 && registrantsState.page > page.totalPages) {
+      registrantsState.page = page.totalPages;
+      return loadRegistrations();
     }
 
     // Only the campaign's own dynamic fields, plus the registration
@@ -1253,18 +1472,21 @@
     const showProductColumn = campaign.gift_mode === 'product_and_gift' || campaign.gift_mode === 'product_then_gift';
     const colCount = 1 + fields.length + (showGiftColumn ? 1 : 0) + (showProductColumn ? 1 : 0);
     headerEl.innerHTML = `
-      ${fields.map((f) => `<th>${escapeHtml(f.label)}</th>`).join('')}
-      ${showProductColumn ? '<th>מוצר שנרכש</th>' : ''}
-      ${showGiftColumn ? '<th>מתנה שנבחרה</th>' : ''}
-      <th>תאריך הרשמה</th>
+      ${fields.map((f) => `<th data-sort="field:${f.id}">${escapeHtml(f.label)}</th>`).join('')}
+      ${showProductColumn ? '<th data-sort="selected_product_name">מוצר שנרכש</th>' : ''}
+      ${showGiftColumn ? '<th data-sort="selected_gift_name">מתנה שנבחרה</th>' : ''}
+      <th data-sort="created_at">תאריך הרשמה</th>
     `;
 
-    if (registrations.length === 0) {
-      rowsEl.innerHTML = `<tr><td colspan="${colCount}" class="empty">עדיין אין נרשמים.</td></tr>`;
+    renderRegistrationsSortArrows();
+    renderRegistrationsPagination(page);
+
+    if (page.rows.length === 0) {
+      rowsEl.innerHTML = `<tr><td colspan="${colCount}" class="empty">${registrantsState.q ? 'לא נמצאו נרשמים תואמים לחיפוש.' : 'עדיין אין נרשמים.'}</td></tr>`;
       return;
     }
 
-    rowsEl.innerHTML = registrations.map((r) => `
+    rowsEl.innerHTML = page.rows.map((r) => `
       <tr>
         ${fields.map((f) => `<td>${formatCustomFieldValue(f, r.custom_fields, r.id)}</td>`).join('')}
         ${showProductColumn ? `<td>${formatSelectedProduct(r)}</td>` : ''}
@@ -1273,6 +1495,17 @@
       </tr>
     `).join('');
   }
+
+  // Debounced so a search isn't fired on every keystroke.
+  let registrantsSearchDebounce = null;
+  document.getElementById('registrantsSearch').addEventListener('input', (e) => {
+    clearTimeout(registrantsSearchDebounce);
+    registrantsSearchDebounce = setTimeout(() => {
+      registrantsState.q = e.target.value.trim();
+      registrantsState.page = 1;
+      loadRegistrations();
+    }, 300);
+  });
 
   const FIELD_TYPE_LABELS = {
     text: 'טקסט', email: 'דואר אלקטרוני', phone: 'מספר טלפון', date: 'תאריך (dd/mm/yy)',
@@ -1285,12 +1518,17 @@
     const valuesText = field.type === 'select' ? ((field.options && field.options.values) || []).join('\n') : '';
     const maxLength = (field.options && field.options.max_length) || DEFAULT_TEXT_MAX_LENGTH;
     return `
-      <div class="field-row" data-field-id="${field.id}">
+      <div class="field-row" data-field-id="${field.id}" draggable="true">
         <div class="field-row-main">
+          <span class="field-drag-handle" title="גרור לסידור מחדש">⠿</span>
           <input class="field-label-input" placeholder="שם השדה" value="${escapeHtml(field.label)}" />
           <select class="field-type-select">
             ${Object.entries(FIELD_TYPE_LABELS).map(([v, l]) => `<option value="${v}" ${v === field.type ? 'selected' : ''}>${l}</option>`).join('')}
           </select>
+          <label class="field-maxlength-inline" data-extra-for="text" data-extra-display="flex" style="display:${field.type === 'text' ? 'flex' : 'none'}">
+            תווים:
+            <input type="number" class="field-maxlength-input" min="1" max="5000" value="${maxLength}" />
+          </label>
           <label class="field-required-toggle">
             <input type="checkbox" class="field-required-input" ${field.required ? 'checked' : ''} /> שדה חובה
           </label>
@@ -1303,10 +1541,6 @@
         <div class="field-row-extra" data-extra-for="select" style="display:${field.type === 'select' ? 'block' : 'none'}">
           <label>ערכים לבחירה (שורה לכל ערך)</label>
           <textarea class="field-values-input" rows="3" placeholder="ערך 1&#10;ערך 2">${escapeHtml(valuesText)}</textarea>
-        </div>
-        <div class="field-row-extra" data-extra-for="text" style="display:${field.type === 'text' ? 'block' : 'none'}">
-          <label>מגבלת תווים</label>
-          <input type="number" class="field-maxlength-input" min="1" max="5000" value="${maxLength}" style="max-width:120px" />
         </div>
         <p class="field-hint" data-extra-for="checkbox" style="display:${field.type === 'checkbox' ? 'block' : 'none'}">
           הטקסט שהוזן ב״שם השדה״ יוצג ליד תיבת הסימון בטופס הציבורי.
@@ -1366,7 +1600,13 @@
     function toggleExtras() {
       const type = typeSelect.value;
       row.querySelectorAll('[data-extra-for]').forEach((el) => {
-        el.style.display = el.getAttribute('data-extra-for') === type ? 'block' : 'none';
+        const show = el.getAttribute('data-extra-for') === type;
+        // Most "extra" panels are block-level, below the main row (the
+        // select-values textarea, the checkbox/file/phone hints) — the
+        // character-limit control is the one exception, sitting inline
+        // in the main row itself, so it needs 'flex' instead of the
+        // 'block' default (see data-extra-display on that element).
+        el.style.display = show ? (el.getAttribute('data-extra-display') || 'block') : 'none';
       });
     }
 
@@ -1445,6 +1685,65 @@
     list.querySelectorAll('.field-row').forEach((row) => wireFieldRow(row));
     fixedList.querySelectorAll('.field-row').forEach((row) => wireFixedFieldRow(row));
   }
+
+  // Drag-and-drop reordering for the custom-fields list — an
+  // alternative to the up/down buttons on each row (kept, since drag
+  // gestures aren't reliably keyboard/screen-reader accessible). The
+  // listeners below are wired once on the (stable) #fieldsList
+  // container itself, not per row, so they survive renderFieldsSection()
+  // replacing the rows' innerHTML on every add/edit/delete.
+  //
+  // While dragging, rows are reordered live in the DOM purely for
+  // visual feedback (classic "insertion point" pattern); the actual
+  // new order is only persisted to the server once, on drop.
+  function getFieldRowAfterDrag(container, y) {
+    const rows = [...container.querySelectorAll('.field-row:not(.dragging)')];
+    return rows.reduce((closest, row) => {
+      const box = row.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closest.offset) return { offset, element: row };
+      return closest;
+    }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+  }
+
+  const fieldsListEl = document.getElementById('fieldsList');
+
+  fieldsListEl.addEventListener('dragstart', (e) => {
+    const row = e.target.closest('.field-row');
+    if (!row) return;
+    row.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', row.getAttribute('data-field-id'));
+  });
+
+  fieldsListEl.addEventListener('dragend', (e) => {
+    const row = e.target.closest('.field-row');
+    if (row) row.classList.remove('dragging');
+  });
+
+  fieldsListEl.addEventListener('dragover', (e) => {
+    const dragging = fieldsListEl.querySelector('.field-row.dragging');
+    if (!dragging) return;
+    e.preventDefault();
+    const after = getFieldRowAfterDrag(fieldsListEl, e.clientY);
+    if (after == null) fieldsListEl.appendChild(dragging);
+    else fieldsListEl.insertBefore(dragging, after);
+  });
+
+  fieldsListEl.addEventListener('drop', async (e) => {
+    if (!fieldsListEl.querySelector('.field-row.dragging')) return;
+    e.preventDefault();
+    const orderedIds = [...fieldsListEl.querySelectorAll('.field-row')].map((row) => Number(row.getAttribute('data-field-id')));
+    try {
+      await api(`/api/campaigns/${id}/fields/reorder`, { method: 'POST', body: JSON.stringify({ field_ids: orderedIds }) });
+      showMsg('fieldsMsg', 'סדר השדות נשמר', 'success');
+      await renderFieldsSection();
+      await loadActivityLog();
+    } catch (error) {
+      showMsg('fieldsMsg', error.message, 'error');
+      await renderFieldsSection(); // revert to the server's actual order
+    }
+  });
 
   document.getElementById('addFieldBtn').addEventListener('click', async () => {
     try {

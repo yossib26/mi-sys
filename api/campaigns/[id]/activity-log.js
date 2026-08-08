@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
     const { id } = req.query;
     const user = auth.requireAuth(req);
     const brandScope = await users.getBrandScope(pool, user);
-    return respond(res, await handlers.listCampaignActivityLog(pool, id, brandScope));
+    return respond(res, await handlers.listCampaignActivityLog(pool, id, brandScope, req.query));
   } catch (error) {
     handleError(res, error);
   }

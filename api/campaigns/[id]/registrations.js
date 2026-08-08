@@ -15,7 +15,7 @@ module.exports = async (req, res) => {
     const user = auth.requireAuth(req);
     if (req.method === 'GET') {
       const brandScope = await users.getBrandScope(pool, user);
-      return respond(res, await handlers.listRegistrations(pool, id, brandScope));
+      return respond(res, await handlers.listRegistrations(pool, id, brandScope, req.query));
     }
     res.status(405).json({ error: 'שיטת בקשה לא נתמכת' });
   } catch (error) {

@@ -113,10 +113,10 @@ const routes = [
     return handlers.updateCampaign(pool, id, body, await users.getBrandScope(pool, user), user);
   } },
   { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)$/, auth: 'admin', handler: (_req, [id]) => handlers.deleteCampaign(pool, id) },
-  { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/activity-log$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.listCampaignActivityLog(pool, id, await users.getBrandScope(pool, user)) },
+  { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/activity-log$/, auth: 'user', handler: async (_req, [id], query, user) => handlers.listCampaignActivityLog(pool, id, await users.getBrandScope(pool, user), query) },
   { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/banner$/, auth: 'user', handler: async (req, [id], _q, user) => handlers.setCampaignBanner(pool, id, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
   { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/banner$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.deleteCampaignBanner(pool, id, await users.getBrandScope(pool, user), user) },
-  { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/registrations$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.listRegistrations(pool, id, await users.getBrandScope(pool, user)) },
+  { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/registrations$/, auth: 'user', handler: async (_req, [id], query, user) => handlers.listRegistrations(pool, id, await users.getBrandScope(pool, user), query) },
   { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/registrations$/, handler: async (req, [id]) => handlers.createRegistration(pool, id, await readJsonBody(req)) },
   { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/form-start$/, handler: (_req, [id]) => handlers.recordCampaignFormStart(pool, id) },
 
@@ -126,6 +126,7 @@ const routes = [
   { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/fields\/(\d+)$/, auth: 'user', handler: async (req, [id, fieldId], _q, user) => handlers.updateCampaignField(pool, id, fieldId, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
   { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/fields\/(\d+)$/, auth: 'user', handler: async (_req, [id, fieldId], _q, user) => handlers.deleteCampaignField(pool, id, fieldId, await users.getBrandScope(pool, user), user) },
   { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/fields\/(\d+)\/move$/, auth: 'user', handler: async (req, [id, fieldId], _q, user) => handlers.moveCampaignField(pool, id, fieldId, (await readJsonBody(req)).direction, await users.getBrandScope(pool, user), user) },
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/fields\/reorder$/, auth: 'user', handler: async (req, [id], _q, user) => handlers.reorderCampaignFields(pool, id, (await readJsonBody(req)).field_ids, await users.getBrandScope(pool, user), user) },
 
   // Gift-choice campaigns: a campaign's own list of gifts.
   { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/gifts$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.listCampaignGifts(pool, id, await users.getBrandScope(pool, user)) },
