@@ -262,6 +262,21 @@
   let brandsCache = [];
   let editingUserId = null;
 
+  // Dirty-tracking for the inline "edit user" panel below — set the
+  // moment any field in an open panel changes, cleared on a successful
+  // save, an explicit cancel, or any full loadUsers() re-render (which
+  // discards whatever edit panel was open anyway). beforeunload is the
+  // one mechanism that covers both "closed the tab/browser" and
+  // "navigated to another page" — on this app every page is a full
+  // HTML file (no client-side routing), so even clicking a topnav link
+  // is a real page unload and fires this the same way.
+  let hasUnsavedEdits = false;
+  window.addEventListener('beforeunload', (e) => {
+    if (!hasUnsavedEdits) return;
+    e.preventDefault();
+    e.returnValue = '';
+  });
+
   function brandChecklistHtml(idPrefix, selectedIds) {
     if (brandsCache.length === 0) return '<span class="empty">אין עדיין מותגים.</span>';
     return brandsCache.map((b) => `
@@ -319,7 +334,13 @@
       return;
     }
 
+    // A full row rebuild discards whatever edit panel was open, so any
+    // tracked dirty state is moot from here on regardless of how we
+    // got here (save/cancel already clear it themselves, but a delete
+    // elsewhere on the page also calls loadUsers() without going
+    // through either of those).
     editingUserId = null;
+    hasUnsavedEdits = false;
     rowsEl.innerHTML = list.map(renderUserRow).join('');
   }
 
@@ -371,11 +392,18 @@
           </div>
         </td>
       `;
+      // Any edit to this panel's fields — password or brand access —
+      // before it's saved should trip the unsaved-changes warning.
+      row.querySelectorAll('input').forEach((input) => {
+        input.addEventListener('input', () => { hasUnsavedEdits = true; });
+        input.addEventListener('change', () => { hasUnsavedEdits = true; });
+      });
       return;
     }
 
     const cancelBtn = e.target.closest('[data-cancel-user]');
     if (cancelBtn) {
+      hasUnsavedEdits = false;
       await loadUsers();
       return;
     }
@@ -390,6 +418,7 @@
       if (checklist) payload.brand_ids = getCheckedBrandIds(checklist);
       try {
         await api(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        hasUnsavedEdits = false;
         showMsg('formMsg', '');
         await loadUsers();
       } catch (error) {
