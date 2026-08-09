@@ -219,6 +219,8 @@
     font-size: 0.72rem; font-weight: 600; color: var(--muted); white-space: nowrap;
     border: 1px solid var(--border-strong); border-radius: 999px; padding: 4px 10px;
   }
+  .field-label-preview { font-size: 0.82rem; color: var(--muted); margin: 8px 0 0; line-height: 1.5; min-height: 1.1em; }
+  .field-label-link { font-weight: 700; text-decoration: underline; color: inherit; }
   .icon-btn {
     width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center;
     border: 1px solid var(--border-strong); border-radius: var(--radius); background: transparent; color: var(--navy);
@@ -517,52 +519,54 @@
     }[c]));
   }
 
-  // Kept in sync by hand with renderDescriptionHtml in
+  // Kept in sync by hand with renderTextWithLinks in
   // lib/campaign-page.js — same escape-first-then-splice-links
   // approach (including the '|self' same-tab flag), used here only to
   // preview what the public page will show (the server does its own
   // independent rendering at display time regardless of what this
-  // preview says).
-  const DESCRIPTION_LINK_PATTERN = /\[([^[\]]+)\]\((https?:\/\/[^\s()|]+)(\|self)?\)/g;
-  function renderDescriptionPreview(text) {
+  // preview says). linkClass lets a call site style its links
+  // differently — the fixed-field label preview renders them
+  // bold+underlined (see .field-label-link), the description preview
+  // doesn't.
+  const LINK_MARKUP_PATTERN = /\[([^[\]]+)\]\((https?:\/\/[^\s()|]+)(\|self)?\)/g;
+  function renderTextWithLinks(text, linkClass) {
+    const cls = linkClass ? ` class="${linkClass}"` : '';
     return escapeHtml(text).replace(
-      DESCRIPTION_LINK_PATTERN,
+      LINK_MARKUP_PATTERN,
       (match, linkText, url, sameWindow) => (sameWindow
-        ? `<a href="${url}">${linkText}</a>`
-        : `<a href="${url}" target="_blank" rel="noopener noreferrer">${linkText}</a>`)
+        ? `<a href="${url}"${cls}>${linkText}</a>`
+        : `<a href="${url}" target="_blank" rel="noopener noreferrer"${cls}>${linkText}</a>`)
     );
   }
 
   function updateDescriptionPreview() {
     const text = document.getElementById('description').value.trim();
     document.getElementById('descriptionPreview').innerHTML = text
-      ? `תצוגה מקדימה: ${renderDescriptionPreview(text)}`
+      ? `תצוגה מקדימה: ${renderTextWithLinks(text)}`
       : '';
   }
 
-  function initDescriptionEditor() {
-    const descriptionEl = document.getElementById('description');
-    const popover = document.getElementById('linkPopover');
-    const linkTextInput = document.getElementById('linkTextInput');
-    const linkUrlInput = document.getElementById('linkUrlInput');
-    const linkNewTabInput = document.getElementById('linkNewTabInput');
-
-    descriptionEl.addEventListener('input', updateDescriptionPreview);
-
-    document.getElementById('insertLinkBtn').addEventListener('click', () => {
-      const selectedText = descriptionEl.value.slice(descriptionEl.selectionStart, descriptionEl.selectionEnd);
+  // Generic "insert link" popover wiring, shared by the description's
+  // block-level toolbar+popover and each fixed field's own compact
+  // per-row popover (see renderFixedFieldRow/wireFixedFieldRow) — both
+  // just splice the same `[text](url|self)` markup into whatever
+  // text input/textarea they're attached to at the current cursor
+  // position.
+  function wireLinkPopover({ textEl, popoverEl, linkTextInput, linkUrlInput, linkNewTabInput, confirmBtn, cancelBtn, triggerBtn, onInsert }) {
+    triggerBtn.addEventListener('click', () => {
+      const selectedText = textEl.value.slice(textEl.selectionStart, textEl.selectionEnd);
       linkTextInput.value = selectedText;
       linkUrlInput.value = '';
       linkNewTabInput.checked = true;
-      popover.hidden = false;
+      popoverEl.hidden = false;
       (selectedText ? linkUrlInput : linkTextInput).focus();
     });
 
-    document.getElementById('linkPopoverCancel').addEventListener('click', () => {
-      popover.hidden = true;
+    cancelBtn.addEventListener('click', () => {
+      popoverEl.hidden = true;
     });
 
-    document.getElementById('linkPopoverConfirm').addEventListener('click', () => {
+    confirmBtn.addEventListener('click', () => {
       const text = linkTextInput.value.trim();
       const url = linkUrlInput.value.trim();
       if (!text || !url) return;
@@ -576,14 +580,30 @@
       }
       const newTabSuffix = linkNewTabInput.checked ? '' : '|self';
       const markup = `[${text.replace(/[[\]]/g, '')}](${url}${newTabSuffix})`;
-      const start = descriptionEl.selectionStart;
-      const end = descriptionEl.selectionEnd;
-      descriptionEl.value = descriptionEl.value.slice(0, start) + markup + descriptionEl.value.slice(end);
+      const start = textEl.selectionStart;
+      const end = textEl.selectionEnd;
+      textEl.value = textEl.value.slice(0, start) + markup + textEl.value.slice(end);
       const cursorPos = start + markup.length;
-      popover.hidden = true;
-      updateDescriptionPreview();
-      descriptionEl.focus();
-      descriptionEl.setSelectionRange(cursorPos, cursorPos);
+      popoverEl.hidden = true;
+      textEl.focus();
+      textEl.setSelectionRange(cursorPos, cursorPos);
+      if (onInsert) onInsert();
+    });
+  }
+
+  function initDescriptionEditor() {
+    const descriptionEl = document.getElementById('description');
+    descriptionEl.addEventListener('input', updateDescriptionPreview);
+    wireLinkPopover({
+      textEl: descriptionEl,
+      popoverEl: document.getElementById('linkPopover'),
+      linkTextInput: document.getElementById('linkTextInput'),
+      linkUrlInput: document.getElementById('linkUrlInput'),
+      linkNewTabInput: document.getElementById('linkNewTabInput'),
+      confirmBtn: document.getElementById('linkPopoverConfirm'),
+      cancelBtn: document.getElementById('linkPopoverCancel'),
+      triggerBtn: document.getElementById('insertLinkBtn'),
+      onInsert: updateDescriptionPreview,
     });
   }
 
@@ -1563,19 +1583,42 @@
       <div class="field-row field-row-fixed" data-field-id="${field.id}" data-fixed="1">
         <div class="field-row-main">
           <input class="field-label-input" placeholder="טקסט ליד תיבת הסימון" value="${escapeHtml(field.label)}" />
+          <button type="button" class="icon-btn" data-action="insert-link" title="הוסף קישור">🔗</button>
           <span class="field-fixed-badge">צ'קבוקס · קבוע${field.required ? ' · חובה' : ''}</span>
+        </div>
+        <div class="link-popover" hidden>
+          <input type="text" class="fixed-link-text-input" placeholder="טקסט הקישור" />
+          <input type="url" class="fixed-link-url-input" placeholder="https://example.com" />
+          <label class="link-popover-checkbox">
+            <input type="checkbox" class="fixed-link-newtab-input" checked /> פתח בחלון חדש
+          </label>
+          <div class="link-popover-actions">
+            <button type="button" data-action="link-confirm">הוסף</button>
+            <button type="button" class="ghost" data-action="link-cancel">ביטול</button>
+          </div>
         </div>
         <p class="field-hint">
           שדה קבוע שקיים בכל קמפיין ומוצג בסוף הטופס הציבורי. אפשר לערוך רק את הטקסט שלידו —
-          אי אפשר למחוק אותו, להזיז אותו או לשנות אם הוא שדה חובה.
+          אי אפשר למחוק אותו, להזיז אותו או לשנות אם הוא שדה חובה. אפשר לסמן טקסט וללחוץ 🔗
+          כדי להוסיף לו קישור (יוצג מודגש עם קו תחתון).
         </p>
+        <p class="field-label-preview"></p>
       </div>`;
   }
 
   function wireFixedFieldRow(row) {
     const fieldId = row.getAttribute('data-field-id');
     const labelInput = row.querySelector('.field-label-input');
-    labelInput.addEventListener('change', async () => {
+    const previewEl = row.querySelector('.field-label-preview');
+
+    function updatePreview() {
+      const text = labelInput.value.trim();
+      previewEl.innerHTML = text ? renderTextWithLinks(text, 'field-label-link') : '';
+    }
+    updatePreview();
+    labelInput.addEventListener('input', updatePreview);
+
+    async function saveLabel() {
       try {
         await api(`/api/campaigns/${id}/fields/${fieldId}`, {
           method: 'PUT',
@@ -1586,6 +1629,22 @@
       } catch (error) {
         showMsg('fieldsMsg', error.message, 'error');
       }
+    }
+    labelInput.addEventListener('change', saveLabel);
+
+    wireLinkPopover({
+      textEl: labelInput,
+      popoverEl: row.querySelector('.link-popover'),
+      linkTextInput: row.querySelector('.fixed-link-text-input'),
+      linkUrlInput: row.querySelector('.fixed-link-url-input'),
+      linkNewTabInput: row.querySelector('.fixed-link-newtab-input'),
+      confirmBtn: row.querySelector('[data-action="link-confirm"]'),
+      cancelBtn: row.querySelector('[data-action="link-cancel"]'),
+      triggerBtn: row.querySelector('[data-action="insert-link"]'),
+      // Inserting a link doesn't fire the label input's own 'change'
+      // event (its value was set programmatically, not typed), so the
+      // save has to be triggered explicitly here too.
+      onInsert: () => { updatePreview(); saveLabel(); },
     });
   }
 
