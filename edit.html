@@ -624,7 +624,7 @@
     const row = document.getElementById('bannerRow');
     row.innerHTML = `
       ${campaign.has_banner ? `
-        <img class="banner-preview" src="/api/campaigns/${campaign.id}/banner" alt="" />
+        <img class="banner-preview" src="/api/campaigns/${campaign.id}/banner?v=${encodeURIComponent(campaign.updated_at)}" alt="" />
         <button class="ghost danger" id="removeBanner">הסר באנר</button>
       ` : '<span class="file-info">אין באנר עדיין.</span>'}
       <label class="upload-label">
