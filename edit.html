@@ -347,6 +347,16 @@
         <option value="product_then_gift">קמפיין המאפשר בחירת מוצר, עם מתנות משויכות לכל מוצר</option>
       </select>
     </div>
+    <div class="grid" style="margin-bottom: 16px;">
+      <div class="field">
+        <label for="productsSectionTitle">כותרת קטע המוצרים בטופס הציבורי</label>
+        <input id="productsSectionTitle" placeholder="איזה מוצר רכשת?" form="campaignForm" required />
+      </div>
+      <div class="field">
+        <label for="giftsSectionTitle">כותרת קטע המתנות בטופס הציבורי</label>
+        <input id="giftsSectionTitle" placeholder="בחר מתנה" form="campaignForm" required />
+      </div>
+    </div>
     <div id="productsSection"></div>
     <div id="giftsSection"></div>
     <p class="msg" id="giftModeMsg"></p>
@@ -2005,6 +2015,8 @@
     document.getElementById('startDate').value = campaign.start_date || '';
     document.getElementById('endDate').value = campaign.end_date || '';
     document.getElementById('footerNote').value = campaign.footer_note || '';
+    document.getElementById('productsSectionTitle').value = campaign.products_section_title || '';
+    document.getElementById('giftsSectionTitle').value = campaign.gifts_section_title || '';
     renderBanner(campaign);
     await renderTemplates(campaign.template);
     document.getElementById('giftMode').value = campaign.gift_mode || 'none';
@@ -2030,6 +2042,12 @@
       // has a default summarized-terms value) — an empty textarea
       // just means "no footer note", sent as '', never null.
       footer_note: document.getElementById('footerNote').value.trim(),
+      // Unlike footer_note, an empty heading would render as a blank
+      // <h2> on the public page rather than just disappearing — both
+      // inputs are `required` (see form="campaignForm" on them above)
+      // so the browser blocks submission before this even runs.
+      products_section_title: document.getElementById('productsSectionTitle').value.trim(),
+      gifts_section_title: document.getElementById('giftsSectionTitle').value.trim(),
     };
     try {
       await api(`/api/campaigns/${id}`, { method: 'PUT', body: JSON.stringify(payload) });

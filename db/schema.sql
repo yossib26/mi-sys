@@ -418,3 +418,13 @@ BEGIN
     UPDATE campaigns SET activetrail_sync_enabled = true WHERE activetrail_token IS NOT NULL;
   END IF;
 END $$;
+
+-- Editable headings for the public page's product-picker and
+-- gift-picker sections (see renderCampaignPage in
+-- lib/campaign-page.js) — previously hardcoded text ("איזה מוצר
+-- רכשת?" / "בחר מתנה"). NOT NULL DEFAULT backfills every existing
+-- campaign with exactly that same wording, so this is purely additive
+-- (nothing changes on the public page until an admin edits it) —
+-- same pattern as footer_note above.
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS products_section_title TEXT NOT NULL DEFAULT 'איזה מוצר רכשת?';
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS gifts_section_title TEXT NOT NULL DEFAULT 'בחר מתנה';
