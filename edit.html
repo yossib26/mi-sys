@@ -284,10 +284,6 @@
           <p class="description-preview" id="descriptionPreview"></p>
         </div>
         <div class="field">
-          <label for="budget">תקציב</label>
-          <input id="budget" type="number" step="0.01" min="0" />
-        </div>
-        <div class="field">
           <label for="status">סטטוס</label>
           <select id="status">
             <option value="draft">טיוטה</option>
@@ -297,14 +293,6 @@
             <option value="cancelled">בוטל</option>
             <option value="archived" id="archivedOption">בארכיון</option>
           </select>
-        </div>
-        <div class="field">
-          <label for="startDate">תאריך התחלה</label>
-          <input id="startDate" type="date" />
-        </div>
-        <div class="field">
-          <label for="endDate">תאריך סיום</label>
-          <input id="endDate" type="date" />
         </div>
       </div>
     </form>
@@ -2010,10 +1998,7 @@
     updateSlugPreview();
     document.getElementById('description').value = campaign.description || '';
     updateDescriptionPreview();
-    document.getElementById('budget').value = campaign.budget ?? '';
     document.getElementById('status').value = campaign.status;
-    document.getElementById('startDate').value = campaign.start_date || '';
-    document.getElementById('endDate').value = campaign.end_date || '';
     document.getElementById('footerNote').value = campaign.footer_note || '';
     document.getElementById('productsSectionTitle').value = campaign.products_section_title || '';
     document.getElementById('giftsSectionTitle').value = campaign.gifts_section_title || '';
@@ -2034,13 +2019,10 @@
       name: document.getElementById('name').value.trim(),
       slug: document.getElementById('slug').value.trim().toLowerCase(),
       description: document.getElementById('description').value.trim() || null,
-      budget: document.getElementById('budget').value ? Number(document.getElementById('budget').value) : null,
       status: document.getElementById('status').value,
-      start_date: document.getElementById('startDate').value || null,
-      end_date: document.getElementById('endDate').value || null,
-      // Unlike description/dates above, this column is NOT NULL (it
-      // has a default summarized-terms value) — an empty textarea
-      // just means "no footer note", sent as '', never null.
+      // Unlike description above, this column is NOT NULL (it has a
+      // default summarized-terms value) — an empty textarea just
+      // means "no footer note", sent as '', never null.
       footer_note: document.getElementById('footerNote').value.trim(),
       // Unlike footer_note, an empty heading would render as a blank
       // <h2> on the public page rather than just disappearing — both

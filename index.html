@@ -206,18 +206,6 @@
         <label for="campaignName">שם קמפיין</label>
         <input id="campaignName" name="name" required placeholder="לדוגמה: מבצע קיץ" />
       </div>
-      <div class="field">
-        <label for="campaignBudget">תקציב</label>
-        <input id="campaignBudget" name="budget" type="number" step="0.01" min="0" placeholder="0" />
-      </div>
-      <div class="field">
-        <label for="campaignStart">תאריך התחלה</label>
-        <input id="campaignStart" name="start_date" type="date" />
-      </div>
-      <div class="field">
-        <label for="campaignEnd">תאריך סיום</label>
-        <input id="campaignEnd" name="end_date" type="date" />
-      </div>
       <div class="field field-wide">
         <label for="campaignDescription">תיאור</label>
         <input id="campaignDescription" name="description" placeholder="אופציונלי" />
@@ -626,9 +614,6 @@
       brand_id: Number(form.brand_id.value),
       name: form.name.value.trim(),
       description: form.description.value.trim() || null,
-      budget: form.budget.value ? Number(form.budget.value) : null,
-      start_date: form.start_date.value || null,
-      end_date: form.end_date.value || null,
     };
     if (!payload.brand_id || !payload.name) {
       showMsg('campaignMsg', 'יש לבחור מותג ולמלא שם קמפיין', true);
