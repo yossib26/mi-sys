@@ -137,6 +137,10 @@ const routes = [
   { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/gifts\/(\d+)\/move$/, auth: 'user', handler: async (req, [id, giftId], _q, user) => handlers.moveCampaignGift(pool, id, giftId, (await readJsonBody(req)).direction, await users.getBrandScope(pool, user), user) },
   { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/gifts\/(\d+)\/image$/, auth: 'user', handler: async (req, [id, giftId], _q, user) => handlers.setCampaignGiftImage(pool, id, giftId, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
   { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/gifts\/(\d+)\/image$/, auth: 'user', handler: async (_req, [id, giftId], _q, user) => handlers.deleteCampaignGiftImage(pool, id, giftId, await users.getBrandScope(pool, user), user) },
+  // Public — called from the campaign page itself when a visitor
+  // clicks/switches a gift, not from the admin UI.
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/gifts\/(\d+)\/reserve$/, handler: async (_req, [id, giftId]) => handlers.reserveCampaignGift(pool, id, giftId) },
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/gifts\/(\d+)\/release$/, handler: async (_req, [id, giftId]) => handlers.releaseCampaignGift(pool, id, giftId) },
 
   // 'product_and_gift' campaigns: a campaign's own list of products
   // (independent of, and alongside, its gift list above).
