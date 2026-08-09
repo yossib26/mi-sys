@@ -708,6 +708,7 @@
           <div class="field-row-actions">
             <button type="button" class="icon-btn" data-action="up" ${idx === 0 ? 'disabled' : ''} title="הזז למעלה">↑</button>
             <button type="button" class="icon-btn" data-action="down" ${idx === total - 1 ? 'disabled' : ''} title="הזז למטה">↓</button>
+            <button type="button" class="icon-btn" data-action="duplicate" title="שכפל מתנה">⧉</button>
             <button type="button" class="icon-btn danger" data-action="delete" title="מחק מתנה">🗑</button>
           </div>
         </div>
@@ -750,6 +751,16 @@
           try {
             await api(`/api/campaigns/${id}/gifts/${giftId}`, { method: 'DELETE' });
             showMsg('giftModeMsg', '');
+            await renderGiftsSection();
+          } catch (error) {
+            showMsg('giftModeMsg', error.message, 'error');
+          }
+          return;
+        }
+        if (action === 'duplicate') {
+          try {
+            await api(`/api/campaigns/${id}/gifts/${giftId}/duplicate`, { method: 'POST' });
+            showMsg('giftModeMsg', 'המתנה שוכפלה', 'success');
             await renderGiftsSection();
           } catch (error) {
             showMsg('giftModeMsg', error.message, 'error');
@@ -862,6 +873,7 @@
           <div class="field-row-actions">
             <button type="button" class="icon-btn" data-action="up" ${idx === 0 ? 'disabled' : ''} title="הזז למעלה">↑</button>
             <button type="button" class="icon-btn" data-action="down" ${idx === total - 1 ? 'disabled' : ''} title="הזז למטה">↓</button>
+            <button type="button" class="icon-btn" data-action="duplicate" title="שכפל מוצר">⧉</button>
             <button type="button" class="icon-btn danger" data-action="delete" title="מחק מוצר">🗑</button>
           </div>
         </div>
@@ -899,6 +911,7 @@
           <div class="field-row-actions">
             <button type="button" class="icon-btn" data-action="up" ${idx === 0 ? 'disabled' : ''} title="הזז למעלה">↑</button>
             <button type="button" class="icon-btn" data-action="down" ${idx === total - 1 ? 'disabled' : ''} title="הזז למטה">↓</button>
+            <button type="button" class="icon-btn" data-action="duplicate" title="שכפל מתנה">⧉</button>
             <button type="button" class="icon-btn danger" data-action="delete" title="מחק מתנה">🗑</button>
           </div>
         </div>
@@ -939,6 +952,16 @@
           try {
             await api(`/api/campaigns/${id}/gifts/${giftId}`, { method: 'DELETE' });
             showMsg('giftModeMsg', '');
+            await renderProductsSection();
+          } catch (error) {
+            showMsg('giftModeMsg', error.message, 'error');
+          }
+          return;
+        }
+        if (action === 'duplicate') {
+          try {
+            await api(`/api/campaigns/${id}/gifts/${giftId}/duplicate`, { method: 'POST' });
+            showMsg('giftModeMsg', 'המתנה שוכפלה', 'success');
             await renderProductsSection();
           } catch (error) {
             showMsg('giftModeMsg', error.message, 'error');
@@ -1026,6 +1049,16 @@
           try {
             await api(`/api/campaigns/${id}/products/${productId}`, { method: 'DELETE' });
             showMsg('giftModeMsg', '');
+            await renderProductsSection();
+          } catch (error) {
+            showMsg('giftModeMsg', error.message, 'error');
+          }
+          return;
+        }
+        if (action === 'duplicate') {
+          try {
+            await api(`/api/campaigns/${id}/products/${productId}/duplicate`, { method: 'POST' });
+            showMsg('giftModeMsg', 'המוצר שוכפל', 'success');
             await renderProductsSection();
           } catch (error) {
             showMsg('giftModeMsg', error.message, 'error');
