@@ -589,11 +589,13 @@
             <a class="icon-btn" href="/c/${encodeURIComponent(c.brand_slug)}/${encodeURIComponent(c.slug)}" target="_blank" rel="noopener" title="תצוגה מקדימה">${ICON_PREVIEW}</a>
           ` : '-'}
         </td>
-        <td class="row-actions">
-          <a class="icon-btn" href="/dashboard.html?id=${c.id}" title="לוח בקרה">${ICON_DASHBOARD}</a>
-          <a class="icon-btn" href="/edit.html?id=${c.id}" title="ערוך">${ICON_EDIT}</a>
-          <button class="icon-btn" data-duplicate-campaign="${c.id}" title="שכפל">${ICON_DUPLICATE}</button>
-          ${c.status !== 'archived' && currentUser && currentUser.role === 'admin' ? `<button class="icon-btn danger" data-delete-campaign="${c.id}" title="ארכב">${ICON_ARCHIVE}</button>` : ''}
+        <td>
+          <div class="row-actions">
+            <a class="icon-btn" href="/dashboard.html?id=${c.id}" title="לוח בקרה">${ICON_DASHBOARD}</a>
+            <a class="icon-btn" href="/edit.html?id=${c.id}" title="ערוך">${ICON_EDIT}</a>
+            <button class="icon-btn" data-duplicate-campaign="${c.id}" title="שכפל">${ICON_DUPLICATE}</button>
+            ${c.status !== 'archived' && currentUser && currentUser.role === 'admin' ? `<button class="icon-btn danger" data-delete-campaign="${c.id}" title="ארכב">${ICON_ARCHIVE}</button>` : ''}
+          </div>
         </td>
       </tr>
     `).join('');
