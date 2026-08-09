@@ -1,0 +1,16 @@
+const pool = require('../../lib/db');
+const handlers = require('../../lib/handlers');
+const auth = require('../../lib/auth');
+const { respond, handleError } = require('../../lib/vercel-response');
+
+module.exports = async (req, res) => {
+  try {
+    auth.requireAdmin(req);
+    const { id } = req.query;
+    if (req.method === 'PUT') return respond(res, await handlers.updateNetwork(pool, id, req.body));
+    if (req.method === 'DELETE') return respond(res, await handlers.deleteNetwork(pool, id));
+    res.status(405).json({ error: 'שיטת בקשה לא נתמכת' });
+  } catch (error) {
+    handleError(res, error);
+  }
+};

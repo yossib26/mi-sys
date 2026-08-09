@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ניהול מותגים</title>
+<title>ניהול רשתות</title>
 <style>
   :root {
     --navy: #33475b;
@@ -54,7 +54,7 @@
   .topnav-user a:hover { color: #fff; }
   h1 { font-size: 1.65rem; font-weight: 500; margin: 0 0 4px; letter-spacing: -0.01em; color: var(--navy); }
   p.subtitle { color: var(--muted); margin: 0; font-size: 0.88rem; }
-  main { max-width: 720px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 20px; }
+  main { max-width: 640px; margin: 0 auto; padding: 32px 24px; display: flex; flex-direction: column; gap: 20px; }
   .page-head { padding-bottom: 20px; border-bottom: 1px solid var(--border-strong); margin-bottom: 4px; }
   section.card {
     background: var(--card);
@@ -106,15 +106,9 @@
   th, td { text-align: right; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
   th { background: var(--bg); color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
   tbody tr:hover { background: var(--accent-soft); }
-  .avatar {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 26px; height: 26px; border-radius: 50%; color: #fff;
-    font-size: 0.72rem; font-weight: 700; margin-inline-end: 8px; flex: none; vertical-align: middle;
-  }
   .empty { color: var(--muted); font-style: italic; }
   .row-actions { display: flex; gap: 6px; }
   .edit-row-input { width: 100%; }
-  .back-link { display: inline-block; margin-bottom: 4px; font-size: 0.9rem; }
   .logo-cell { display: flex; align-items: center; gap: 8px; }
   .logo-thumb { width: 32px; height: 32px; object-fit: contain; border-radius: 6px; border: 1px solid var(--border-strong); vertical-align: middle; background: var(--card); }
   .upload-label-sm {
@@ -133,34 +127,34 @@
 </header>
 <main>
   <div class="page-head">
-    <h1>ניהול מותגים</h1>
-    <p class="subtitle">הוספה ועריכה של מותגים</p>
+    <h1>ניהול רשתות</h1>
+    <p class="subtitle">קטלוג רשתות (למשל רשתות שיווק) גלובלי — לכל קמפיין בוחרים בעריכתו אילו מהן רלוונטיות לו.</p>
   </div>
 
   <section class="card">
-    <h2>הוספת מותג</h2>
-    <form id="brandForm">
+    <h2>הוספת רשת</h2>
+    <form id="networkForm">
       <div class="field">
-        <label for="brandName">שם מותג</label>
-        <input id="brandName" required placeholder="לדוגמה: Nike" />
+        <label for="networkName">שם רשת</label>
+        <input id="networkName" required placeholder="לדוגמה: שופרסל" />
       </div>
-      <button type="submit">הוסף מותג</button>
+      <button type="submit">הוסף רשת</button>
     </form>
     <p class="msg" id="formMsg"></p>
   </section>
 
   <section class="card">
-    <h2>מותגים קיימים</h2>
+    <h2>רשתות קיימות</h2>
     <table>
       <thead>
         <tr>
-          <th>שם מותג</th>
+          <th>שם רשת</th>
           <th>לוגו</th>
-          <th>נוצר בתאריך</th>
+          <th>נוצרה בתאריך</th>
           <th>פעולות</th>
         </tr>
       </thead>
-      <tbody id="brandRows">
+      <tbody id="networkRows">
         <tr><td colspan="4" class="empty">טוען…</td></tr>
       </tbody>
     </table>
@@ -174,27 +168,17 @@
     }[c]));
   }
 
-  // Shared across index/edit/users/brands.html (each page keeps its own
-  // copy — this app has no build step to share JS across static pages).
-  // Populates the navy top bar: the nav links (gated to admin-only
-  // pages the same way each page already gates itself) and the
-  // logged-in user's name/role/logout link.
+  // Shared across index/edit/users/brands/networks.html (each page
+  // keeps its own copy — this app has no build step to share JS
+  // across static pages). Populates the navy top bar: the nav links
+  // (gated to admin-only pages the same way each page already gates
+  // itself) and the logged-in user's name/role/logout link.
   const TOPNAV_LINKS = [
     { href: '/', label: 'קמפיינים', adminOnly: false },
     { href: '/users.html', label: 'משתמשים', adminOnly: true },
     { href: '/brands.html', label: 'מותגים', adminOnly: true },
     { href: '/networks.html', label: 'רשתות', adminOnly: true },
   ];
-  const AVATAR_COLORS = ['#0091ae', '#33475b', '#ff7a59', '#00a4bd', '#7c98b6', '#516f90'];
-  function avatarColor(str) {
-    let h = 0;
-    for (let i = 0; i < String(str).length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
-    return AVATAR_COLORS[h % AVATAR_COLORS.length];
-  }
-  function avatarHtml(name) {
-    const initial = (name || '?').trim().charAt(0).toUpperCase() || '?';
-    return `<span class="avatar" style="background:${avatarColor(name || '')}">${escapeHtml(initial)}</span>`;
-  }
   function renderTopnav(user) {
     const navEl = document.getElementById('topnavLinks');
     if (navEl) {
@@ -235,9 +219,9 @@
     return data;
   }
 
-  // Populated by loadBrands(), read back when entering edit mode so
+  // Populated by loadNetworks(), read back when entering edit mode so
   // the logo cell knows whether to offer "הסר" without a fresh request.
-  let brandsCache = [];
+  let networksCache = [];
 
   function fileToDataUri(file) {
     return new Promise((resolve, reject) => {
@@ -248,100 +232,100 @@
     });
   }
 
-  function logoCellHtml(b) {
-    return b.has_logo
-      ? `<img class="logo-thumb" src="/api/brands/${b.id}/logo" alt="" />`
+  function logoCellHtml(n) {
+    return n.has_logo
+      ? `<img class="logo-thumb" src="/api/networks/${n.id}/logo" alt="" />`
       : '<span class="empty">אין לוגו</span>';
   }
 
-  function renderRow(b) {
+  function renderRow(n) {
     return `
-      <tr data-row-for="${b.id}">
-        <td>${avatarHtml(b.name)}<span class="cell-name">${escapeHtml(b.name)}</span></td>
-        <td class="logo-cell">${logoCellHtml(b)}</td>
-        <td>${new Date(b.created_at).toLocaleDateString('he-IL')}</td>
+      <tr data-row-for="${n.id}">
+        <td><span class="cell-name">${escapeHtml(n.name)}</span></td>
+        <td class="logo-cell">${logoCellHtml(n)}</td>
+        <td>${new Date(n.created_at).toLocaleDateString('he-IL')}</td>
         <td class="row-actions">
-          <button class="ghost" data-edit-brand="${b.id}">ערוך</button>
-          <button class="ghost danger" data-delete-brand="${b.id}">מחק</button>
+          <button class="ghost" data-edit-network="${n.id}">ערוך</button>
+          <button class="ghost danger" data-delete-network="${n.id}">מחק</button>
         </td>
       </tr>
     `;
   }
 
-  async function loadBrands() {
-    const rowsEl = document.getElementById('brandRows');
+  async function loadNetworks() {
+    const rowsEl = document.getElementById('networkRows');
     try {
-      brandsCache = await api('/api/brands');
+      networksCache = await api('/api/networks');
     } catch (error) {
       rowsEl.innerHTML = `<tr><td colspan="4" class="empty">${escapeHtml(error.message)}</td></tr>`;
       return;
     }
 
-    if (brandsCache.length === 0) {
-      rowsEl.innerHTML = '<tr><td colspan="4" class="empty">אין עדיין מותגים.</td></tr>';
+    if (networksCache.length === 0) {
+      rowsEl.innerHTML = '<tr><td colspan="4" class="empty">אין עדיין רשתות.</td></tr>';
       return;
     }
 
-    rowsEl.innerHTML = brandsCache.map(renderRow).join('');
+    rowsEl.innerHTML = networksCache.map(renderRow).join('');
   }
 
-  document.getElementById('brandForm').addEventListener('submit', async (e) => {
+  document.getElementById('networkForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = document.getElementById('brandName').value.trim();
+    const name = document.getElementById('networkName').value.trim();
     if (!name) return;
     try {
-      await api('/api/brands', { method: 'POST', body: JSON.stringify({ name }) });
+      await api('/api/networks', { method: 'POST', body: JSON.stringify({ name }) });
       e.target.reset();
       showMsg('formMsg', '');
-      await loadBrands();
+      await loadNetworks();
     } catch (error) {
       showMsg('formMsg', error.message, 'error');
     }
   });
 
-  function logoEditCellHtml(b) {
+  function logoEditCellHtml(n) {
     return `
-      ${b.has_logo
-        ? `<img class="logo-thumb" src="/api/brands/${b.id}/logo" alt="" /><button type="button" class="ghost danger" data-remove-logo="${b.id}">הסר</button>`
+      ${n.has_logo
+        ? `<img class="logo-thumb" src="/api/networks/${n.id}/logo" alt="" /><button type="button" class="ghost danger" data-remove-logo="${n.id}">הסר</button>`
         : ''}
       <label class="upload-label-sm">
-        ${b.has_logo ? 'החלף' : 'העלה'}
-        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-logo-input="${b.id}" hidden />
+        ${n.has_logo ? 'החלף' : 'העלה'}
+        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-logo-input="${n.id}" hidden />
       </label>
     `;
   }
 
-  document.getElementById('brandRows').addEventListener('click', async (e) => {
-    const editId = e.target.getAttribute('data-edit-brand');
+  document.getElementById('networkRows').addEventListener('click', async (e) => {
+    const editId = e.target.getAttribute('data-edit-network');
     if (editId) {
       const row = document.querySelector(`tr[data-row-for="${editId}"]`);
-      const brand = brandsCache.find((b) => String(b.id) === editId);
+      const network = networksCache.find((n) => String(n.id) === editId);
       const currentName = row.children[0].querySelector('.cell-name').textContent;
       row.children[0].innerHTML = `<input class="edit-row-input" value="${currentName.replace(/"/g, '&quot;')}" />`;
-      row.children[1].innerHTML = logoEditCellHtml(brand);
+      row.children[1].innerHTML = logoEditCellHtml(network);
       row.children[3].innerHTML = `
-        <button data-save-brand="${editId}">שמור</button>
-        <button class="ghost" data-cancel-brand="${editId}">ביטול</button>
+        <button data-save-network="${editId}">שמור</button>
+        <button class="ghost" data-cancel-network="${editId}">ביטול</button>
       `;
       row.querySelector('input').focus();
       return;
     }
 
-    const cancelId = e.target.getAttribute('data-cancel-brand');
+    const cancelId = e.target.getAttribute('data-cancel-network');
     if (cancelId) {
-      await loadBrands();
+      await loadNetworks();
       return;
     }
 
-    const saveId = e.target.getAttribute('data-save-brand');
+    const saveId = e.target.getAttribute('data-save-network');
     if (saveId) {
       const row = document.querySelector(`tr[data-row-for="${saveId}"]`);
       const newName = row.querySelector('input').value.trim();
       if (!newName) return;
       try {
-        await api(`/api/brands/${saveId}`, { method: 'PUT', body: JSON.stringify({ name: newName }) });
+        await api(`/api/networks/${saveId}`, { method: 'PUT', body: JSON.stringify({ name: newName }) });
         showMsg('formMsg', '');
-        await loadBrands();
+        await loadNetworks();
       } catch (error) {
         showMsg('formMsg', error.message, 'error');
       }
@@ -352,28 +336,28 @@
     if (removeLogoId) {
       if (!confirm('להסיר את הלוגו?')) return;
       try {
-        await api(`/api/brands/${removeLogoId}/logo`, { method: 'DELETE' });
+        await api(`/api/networks/${removeLogoId}/logo`, { method: 'DELETE' });
         showMsg('formMsg', '');
-        await loadBrands();
+        await loadNetworks();
       } catch (error) {
         showMsg('formMsg', error.message, 'error');
       }
       return;
     }
 
-    const deleteId = e.target.getAttribute('data-delete-brand');
+    const deleteId = e.target.getAttribute('data-delete-network');
     if (deleteId) {
-      if (!confirm('למחוק את המותג? כל הקמפיינים שלו יימחקו גם הם.')) return;
+      if (!confirm('למחוק את הרשת? היא תוסר מכל הקמפיינים שסימנו אותה כרלוונטית.')) return;
       try {
-        await api(`/api/brands/${deleteId}`, { method: 'DELETE' });
-        await loadBrands();
+        await api(`/api/networks/${deleteId}`, { method: 'DELETE' });
+        await loadNetworks();
       } catch (error) {
         showMsg('formMsg', error.message, 'error');
       }
     }
   });
 
-  document.getElementById('brandRows').addEventListener('change', async (e) => {
+  document.getElementById('networkRows').addEventListener('change', async (e) => {
     const logoId = e.target.getAttribute('data-logo-input');
     if (!logoId) return;
     const file = e.target.files[0];
@@ -386,9 +370,9 @@
     }
     try {
       const dataUri = await fileToDataUri(file);
-      await api(`/api/brands/${logoId}/logo`, { method: 'PUT', body: JSON.stringify({ image: dataUri }) });
+      await api(`/api/networks/${logoId}/logo`, { method: 'PUT', body: JSON.stringify({ image: dataUri }) });
       showMsg('formMsg', 'הלוגו עודכן', 'success');
-      await loadBrands();
+      await loadNetworks();
     } catch (error) {
       showMsg('formMsg', error.message, 'error');
     }
@@ -427,7 +411,7 @@
         return;
       }
       renderTopnav(me);
-      await loadBrands();
+      await loadNetworks();
       startSessionWatchdog();
     } catch {
       location.href = '/login.html';

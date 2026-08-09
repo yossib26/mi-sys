@@ -28,6 +28,7 @@ const staticPages = {
   '/login.html': 'login.html',
   '/users.html': 'users.html',
   '/brands.html': 'brands.html',
+  '/networks.html': 'networks.html',
   '/dashboard.html': 'dashboard.html',
 };
 const htmlCache = Object.fromEntries(
@@ -152,6 +153,21 @@ const routes = [
   { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/products\/(\d+)\/move$/, auth: 'user', handler: async (req, [id, productId], _q, user) => handlers.moveCampaignProduct(pool, id, productId, (await readJsonBody(req)).direction, await users.getBrandScope(pool, user), user) },
   { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/products\/(\d+)\/image$/, auth: 'user', handler: async (req, [id, productId], _q, user) => handlers.setCampaignProductImage(pool, id, productId, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
   { method: 'DELETE', pattern: /^\/api\/campaigns\/(\d+)\/products\/(\d+)\/image$/, auth: 'user', handler: async (_req, [id, productId], _q, user) => handlers.deleteCampaignProductImage(pool, id, productId, await users.getBrandScope(pool, user), user) },
+
+  // Global "networks" catalog (e.g. retail chains) — managed on its
+  // own admin page (networks.html), same shape/permissions as brands:
+  // any logged-in user can list, only admins manage the catalog.
+  { method: 'GET', pattern: /^\/api\/networks$/, auth: 'user', handler: () => handlers.listNetworks(pool) },
+  { method: 'POST', pattern: /^\/api\/networks$/, auth: 'admin', handler: async (req) => handlers.createNetwork(pool, await readJsonBody(req)) },
+  { method: 'PUT', pattern: /^\/api\/networks\/(\d+)$/, auth: 'admin', handler: async (req, [networkId]) => handlers.updateNetwork(pool, networkId, await readJsonBody(req)) },
+  { method: 'DELETE', pattern: /^\/api\/networks\/(\d+)$/, auth: 'admin', handler: (_req, [networkId]) => handlers.deleteNetwork(pool, networkId) },
+  { method: 'PUT', pattern: /^\/api\/networks\/(\d+)\/logo$/, auth: 'admin', handler: async (req, [networkId]) => handlers.setNetworkLogo(pool, networkId, await readJsonBody(req)) },
+  { method: 'DELETE', pattern: /^\/api\/networks\/(\d+)\/logo$/, auth: 'admin', handler: (_req, [networkId]) => handlers.deleteNetworkLogo(pool, networkId) },
+
+  // Which of the global networks are relevant to this campaign — a
+  // checkbox list in edit.html, saved as the whole set at once.
+  { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/networks$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.listCampaignNetworks(pool, id, await users.getBrandScope(pool, user)) },
+  { method: 'PUT', pattern: /^\/api\/campaigns\/(\d+)\/networks$/, auth: 'user', handler: async (req, [id], _q, user) => handlers.setCampaignNetworks(pool, id, (await readJsonBody(req)).network_ids, await users.getBrandScope(pool, user), user) },
 ];
 
 const server = http.createServer(async (req, res) => {
@@ -228,6 +244,20 @@ const server = http.createServer(async (req, res) => {
     if (brandLogoMatch) {
       try {
         const { mime, buffer } = await handlers.getBrandLogo(pool, brandLogoMatch[1]);
+        res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=3600' });
+        res.end(buffer);
+      } catch (error) {
+        sendJson(res, error.statusCode || 500, { error: error.message });
+      }
+      return;
+    }
+
+    // Public, same reasoning — a network's own logo, same shape as the
+    // brand logo just above.
+    const networkLogoMatch = req.method === 'GET' && url.pathname.match(/^\/api\/networks\/(\d+)\/logo$/);
+    if (networkLogoMatch) {
+      try {
+        const { mime, buffer } = await handlers.getNetworkLogo(pool, networkLogoMatch[1]);
         res.writeHead(200, { 'Content-Type': mime, 'Cache-Control': 'public, max-age=3600' });
         res.end(buffer);
       } catch (error) {

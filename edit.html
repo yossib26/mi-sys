@@ -163,10 +163,10 @@
 
   section.card p.subtitle { margin: -10px 0 16px; }
   .field-row { border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 10px 14px; margin-bottom: 10px; background: var(--card); transition: box-shadow 0.15s ease, opacity 0.15s ease; }
-  #fieldsList .field-row { cursor: grab; }
+  #fieldsList .field-row, #networksList .field-row { cursor: grab; }
   #fixedFieldsList:not(:empty) { margin-top: 10px; }
-  #fieldsList .field-row.dragging { opacity: 0.4; }
-  #fieldsList .field-row.drag-over-line { box-shadow: 0 -2px 0 0 var(--accent); }
+  #fieldsList .field-row.dragging, #networksList .field-row.dragging { opacity: 0.4; }
+  #fieldsList .field-row.drag-over-line, #networksList .field-row.drag-over-line { box-shadow: 0 -2px 0 0 var(--accent); }
   /* Every control stays on one row — never wraps to a second line —
      so a long fields list reads as a compact stack instead of a tall
      one. If the card is ever too narrow for all of them at once, the
@@ -232,6 +232,49 @@
   .icon-btn:disabled { opacity: 0.3; cursor: default; }
   .icon-btn:disabled:hover { background: transparent; }
   .fields-empty { color: var(--muted); font-style: italic; font-size: 0.9rem; margin: 0; }
+  .checklist { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+  .checklist label { display: flex; align-items: center; gap: 6px; font-size: 0.88rem; cursor: pointer; }
+  .checklist label input { width: auto; }
+
+  /* Tabs — four regions of what used to be one long scroll (settings,
+     dashboard, registrants, activity log) switched in place instead.
+     Underlined-active-tab style rather than the button component above
+     (that one's reserved for real actions, not navigation). */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-strong); }
+  .tab-btn {
+    background: transparent; border: none; border-bottom: 2px solid transparent;
+    border-radius: 0; color: var(--muted); font-weight: 600; font-size: 0.9rem;
+    padding: 10px 6px; margin-bottom: -1px; cursor: pointer; transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .tab-btn:hover { background: transparent; color: var(--navy); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: flex; flex-direction: column; gap: 20px; }
+  .tab-panel[hidden] { display: none; }
+
+  /* Dashboard tab — KPI cards + plain CSS/HTML charts, ported from the
+     now-embedded dashboard.html (no charting library, same as the rest
+     of this app's zero-dependency approach). */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+  .kpi-card { background: var(--bg); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 16px; text-align: center; }
+  .kpi-card .kpi-value { font-size: 1.7rem; font-weight: 700; color: var(--navy); line-height: 1.2; }
+  .kpi-card .kpi-label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+  .chart-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .chart-bar-row:last-child { margin-bottom: 0; }
+  .chart-bar-label { width: 170px; flex: 0 0 auto; font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chart-bar-track { flex: 1; background: var(--bg); border-radius: var(--radius); height: 20px; overflow: hidden; }
+  .chart-bar-fill { height: 100%; border-radius: var(--radius); background: var(--accent); transition: width 0.3s ease; }
+  .chart-bar-value { width: 46px; flex: 0 0 auto; text-align: left; font-size: 0.85rem; font-weight: 600; color: var(--navy); }
+  .time-chart-wrap { overflow-x: auto; padding-bottom: 4px; }
+  .time-chart { display: flex; align-items: flex-end; gap: 8px; height: 180px; min-width: min-content; }
+  .time-chart-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; width: 34px; flex: 0 0 auto; height: 100%; }
+  .time-chart-value { font-size: 0.68rem; color: var(--muted); margin-bottom: 3px; }
+  .time-chart-bar { width: 18px; background: var(--accent); border-radius: 3px 3px 0 0; min-height: 2px; }
+  .time-chart-label { font-size: 0.65rem; color: var(--muted); margin-top: 6px; white-space: nowrap; }
+  .sub-chart { margin-bottom: 22px; }
+  .sub-chart:last-child { margin-bottom: 0; }
+  .sub-chart-title { font-size: 0.85rem; font-weight: 600; margin: 0 0 10px; color: var(--navy); }
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 720px) { .charts-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -247,6 +290,14 @@
     <p class="subtitle" id="pageSubtitle"></p>
   </div>
 
+  <div class="tabs" role="tablist">
+    <button type="button" class="tab-btn active" data-tab="settings" role="tab" aria-selected="true">הגדרות</button>
+    <button type="button" class="tab-btn" data-tab="dashboard" role="tab" aria-selected="false">לוח בקרה</button>
+    <button type="button" class="tab-btn" data-tab="registrations" role="tab" aria-selected="false">נרשמים</button>
+    <button type="button" class="tab-btn" data-tab="activity" role="tab" aria-selected="false">היסטוריית שינויים</button>
+  </div>
+
+  <div class="tab-panel" id="tabPanel-settings" role="tabpanel">
   <section class="card">
     <h2>פרטי קמפיין</h2>
     <form id="campaignForm">
@@ -352,6 +403,26 @@
   </section>
 
   <section class="card">
+    <h2>רשתות לבחירה</h2>
+    <p class="subtitle">
+      בחר אילו רשתות (מתוך <a href="/networks.html">קטלוג הרשתות</a>) רלוונטיות לקמפיין הזה, וסדר אותן — בגרירה או בחצים — בסדר שבו יוצגו. הנרשם יבחר אחת מהן בטופס הציבורי, באותו הסדר, בנוסף לשדות הטופס.
+      מוצג בטופס הציבורי רק כשמסומן להצגה ונבחרה לפחות רשת אחת.
+    </p>
+    <label class="field-required-toggle" style="margin-bottom: 16px;">
+      <input type="checkbox" id="networksEnabled" checked />
+      הצג את קטע הרשתות בטופס הציבורי
+    </label>
+    <div class="field" style="margin-bottom: 16px;">
+      <label for="networksSectionTitle">כותרת קטע הרשתות בטופס הציבורי</label>
+      <input id="networksSectionTitle" placeholder="בחר רשת" form="campaignForm" required />
+    </div>
+    <div id="networksList"></div>
+    <p class="fields-empty" id="networksAddLabel" style="margin-top:14px; display:none;">הוסף רשת מהקטלוג:</p>
+    <div class="checklist" id="networksChecklist"></div>
+    <p class="msg" id="networksMsg"></p>
+  </section>
+
+  <section class="card">
     <h2>סנכרון ל-ActiveTrail</h2>
     <p class="subtitle">נרשם חדש בקמפיין הזה יתווסף אוטומטית לקבוצה שתבחר, ברקע ובלי לעכב את ההרשמה — רק אם סימן את תיבת "אני מאשר דיוור וקבלת חומר פרסומי".</p>
     <div id="activetrailSection"><p class="file-info">טוען…</p></div>
@@ -372,12 +443,50 @@
     </div>
     <p class="msg" id="formMsg"></p>
   </div>
+  </div>
 
+  <div class="tab-panel" id="tabPanel-dashboard" role="tabpanel" hidden>
+  <section class="card">
+    <h2>סיכום</h2>
+    <p class="subtitle">מבט־על על הביצועים של הקמפיין.</p>
+    <div class="kpi-grid" id="kpiGrid"><p class="empty">טוען…</p></div>
+  </section>
+
+  <section class="card">
+    <h2>משפך המרה</h2>
+    <p class="subtitle">כמה מתוך מי שצפו בדף בפועל התחילו למלא והשלימו הרשמה.</p>
+    <div id="funnelChart"><p class="empty">טוען…</p></div>
+  </section>
+
+  <section class="card">
+    <h2>נרשמים לאורך זמן</h2>
+    <p class="subtitle">מספר ההרשמות שהושלמו בכל יום.</p>
+    <div class="time-chart-wrap"><div id="timeChart"><p class="empty">טוען…</p></div></div>
+  </section>
+
+  <section class="card charts-grid" id="selectionBreakdownCard" style="display:none">
+    <div id="giftBreakdown" style="display:none">
+      <h2>התפלגות מתנות שנבחרו</h2>
+      <div id="giftChart"></div>
+    </div>
+    <div id="productBreakdown" style="display:none">
+      <h2>התפלגות מוצרים שנבחרו</h2>
+      <div id="productChart"></div>
+    </div>
+  </section>
+
+  <section class="card" id="fieldsBreakdownCard" style="display:none">
+    <h2>התפלגות שדות בטופס</h2>
+    <p class="subtitle">איך הנרשמים ענו על שדות בחירה וצ'קבוקס בטופס.</p>
+    <div id="fieldsCharts"></div>
+  </section>
+  </div>
+
+  <div class="tab-panel" id="tabPanel-registrations" role="tabpanel" hidden>
   <section class="card">
     <div class="section-header">
       <h2>נרשמים</h2>
       <div class="section-header-actions">
-        <a class="ghost" id="dashboardLink" href="#">📈 לוח בקרה</a>
         <button type="button" class="ghost" id="exportRegistrationsBtn">📊 ייצוא לאקסל</button>
       </div>
     </div>
@@ -401,7 +510,9 @@
     </div>
     <div class="pagination" id="registrationsPagination"></div>
   </section>
+  </div>
 
+  <div class="tab-panel" id="tabPanel-activity" role="tabpanel" hidden>
   <section class="card">
     <h2>היסטוריית שינויים</h2>
     <p class="subtitle">רישום כל הפעולות שבוצעו בעריכת הקמפיין הזה — מי, מה ומתי.</p>
@@ -427,6 +538,7 @@
     </div>
     <div class="pagination" id="activityLogPagination"></div>
   </section>
+  </div>
 </main>
 
 <script>
@@ -435,8 +547,6 @@
     document.body.innerHTML = '<main><p>חסר מזהה קמפיין (id) בכתובת.</p></main>';
     throw new Error('missing id');
   }
-  document.getElementById('dashboardLink').href = `/dashboard.html?id=${id}`;
-
   // Shared across index/edit/users/brands.html (each page keeps its own
   // copy — this app has no build step to share JS across static pages).
   // Populates the navy top bar: the nav links (gated to admin-only
@@ -446,6 +556,7 @@
     { href: '/', label: 'קמפיינים', adminOnly: false },
     { href: '/users.html', label: 'משתמשים', adminOnly: true },
     { href: '/brands.html', label: 'מותגים', adminOnly: true },
+    { href: '/networks.html', label: 'רשתות', adminOnly: true },
   ];
   function renderTopnav(user) {
     const navEl = document.getElementById('topnavLinks');
@@ -1194,6 +1305,173 @@
     }
   });
 
+  // Independent on/off switch for the whole networks section — saves
+  // right away on toggle, same pattern as activetrailSyncEnabled below.
+  // Doesn't touch the selection/order underneath, so re-enabling later
+  // brings the same networks back in the same order.
+  document.getElementById('networksEnabled').addEventListener('change', async (e) => {
+    try {
+      await api(`/api/campaigns/${id}`, { method: 'PUT', body: JSON.stringify({ networks_enabled: e.target.checked }) });
+      showMsg('networksMsg', 'ההגדרה נשמרה', 'success');
+    } catch (error) {
+      showMsg('networksMsg', error.message, 'error');
+      e.target.checked = !e.target.checked; // revert the failed change
+    }
+  });
+
+  // Networks — selection AND display order against the *global*
+  // catalog (managed on its own page, networks.html), not a
+  // per-campaign list. Two parts: a reorderable list of already-
+  // selected networks (up/down/remove, .field-row style — same as
+  // gifts/products), and below it a plain "add from catalog"
+  // checklist of the networks not yet selected. Every change (add,
+  // remove, reorder) saves the *whole* ordered id array in one PUT
+  // (same full-replace pattern as updateUser's brand_ids), then
+  // re-renders from the server response so the two lists and the
+  // up/down disabled states stay in sync.
+  function renderNetworkRow(n, idx, total) {
+    return `
+      <div class="field-row" data-network-id="${n.id}" draggable="true">
+        <div class="field-row-main">
+          <span class="field-drag-handle" title="גרור לסידור מחדש">⠿</span>
+          ${n.has_logo ? `<img src="/api/networks/${n.id}/logo" alt="" style="width:28px;height:28px;object-fit:contain;border-radius:6px;flex:none;">` : ''}
+          <span style="flex:1 1 auto;">${escapeHtml(n.name)}</span>
+          <div class="field-row-actions">
+            <button type="button" class="icon-btn" data-action="up" ${idx === 0 ? 'disabled' : ''} title="הזז למעלה">↑</button>
+            <button type="button" class="icon-btn" data-action="down" ${idx === total - 1 ? 'disabled' : ''} title="הזז למטה">↓</button>
+            <button type="button" class="icon-btn danger" data-action="remove" title="הסר רשת">🗑</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  async function saveNetworkOrder(networkIds) {
+    await api(`/api/campaigns/${id}/networks`, { method: 'PUT', body: JSON.stringify({ network_ids: networkIds }) });
+    showMsg('networksMsg', 'הרשתות עודכנו', 'success');
+    await renderNetworksSection(); // re-fetch (has_logo, catalog additions) rather than trust the PUT's partial response
+  }
+
+  function renderNetworksFromData({ allNetworks, selectedNetworks }) {
+    const list = document.getElementById('networksList');
+    const addLabel = document.getElementById('networksAddLabel');
+    const addSection = document.getElementById('networksChecklist');
+
+    list.innerHTML = selectedNetworks.length === 0
+      ? '<p class="fields-empty">לא נבחרו עדיין רשתות.</p>'
+      : selectedNetworks.map((n, i) => renderNetworkRow(n, i, selectedNetworks.length)).join('');
+
+    list.querySelectorAll('.field-row').forEach((row) => {
+      const networkId = Number(row.getAttribute('data-network-id'));
+      row.querySelector('.field-row-actions').querySelectorAll('.icon-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const action = btn.getAttribute('data-action');
+          const ids = selectedNetworks.map((n) => n.id);
+          const pos = ids.indexOf(networkId);
+          if (action === 'remove') {
+            ids.splice(pos, 1);
+          } else if (action === 'up' && pos > 0) {
+            [ids[pos - 1], ids[pos]] = [ids[pos], ids[pos - 1]];
+          } else if (action === 'down' && pos < ids.length - 1) {
+            [ids[pos + 1], ids[pos]] = [ids[pos], ids[pos + 1]];
+          } else {
+            return;
+          }
+          try {
+            await saveNetworkOrder(ids);
+          } catch (error) {
+            showMsg('networksMsg', error.message, 'error');
+          }
+        });
+      });
+    });
+
+    const selectedIds = new Set(selectedNetworks.map((n) => n.id));
+    const unselected = allNetworks.filter((n) => !selectedIds.has(n.id));
+    if (allNetworks.length === 0) {
+      addLabel.style.display = 'none';
+      addSection.innerHTML = `<p class="fields-empty">אין עדיין רשתות בקטלוג. אפשר להוסיף ב<a href="/networks.html">ניהול רשתות</a>.</p>`;
+    } else if (unselected.length === 0) {
+      addLabel.style.display = 'none';
+      addSection.innerHTML = '';
+    } else {
+      addLabel.style.display = '';
+      addSection.innerHTML = unselected.map((n) => `
+        <label>
+          <input type="checkbox" class="network-add-checkbox" value="${n.id}" />
+          ${escapeHtml(n.name)}
+        </label>
+      `).join('');
+      addSection.querySelectorAll('.network-add-checkbox').forEach((checkbox) => {
+        checkbox.addEventListener('change', async () => {
+          const ids = [...selectedNetworks.map((n) => n.id), Number(checkbox.value)];
+          try {
+            await saveNetworkOrder(ids);
+          } catch (error) {
+            showMsg('networksMsg', error.message, 'error');
+            checkbox.checked = false;
+          }
+        });
+      });
+    }
+  }
+
+  async function renderNetworksSection() {
+    let allNetworks, selectedNetworks;
+    try {
+      [allNetworks, selectedNetworks] = await Promise.all([
+        api('/api/networks'),
+        api(`/api/campaigns/${id}/networks`),
+      ]);
+    } catch (error) {
+      document.getElementById('networksList').innerHTML = `<p class="fields-empty">${escapeHtml(error.message)}</p>`;
+      return;
+    }
+    renderNetworksFromData({ allNetworks, selectedNetworks });
+  }
+
+  // Drag-and-drop reordering for the selected-networks list — same
+  // "insertion point" pattern as #fieldsList below (getFieldRowAfterDrag
+  // is defined once, later in this script, but as a function
+  // declaration it's hoisted and usable here too). Kept alongside the
+  // up/down buttons in renderNetworkRow, not instead of them, for the
+  // same accessibility reason as the fields list.
+  const networksListEl = document.getElementById('networksList');
+
+  networksListEl.addEventListener('dragstart', (e) => {
+    const row = e.target.closest('.field-row');
+    if (!row) return;
+    row.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', row.getAttribute('data-network-id'));
+  });
+
+  networksListEl.addEventListener('dragend', (e) => {
+    const row = e.target.closest('.field-row');
+    if (row) row.classList.remove('dragging');
+  });
+
+  networksListEl.addEventListener('dragover', (e) => {
+    const dragging = networksListEl.querySelector('.field-row.dragging');
+    if (!dragging) return;
+    e.preventDefault();
+    const after = getFieldRowAfterDrag(networksListEl, e.clientY);
+    if (after == null) networksListEl.appendChild(dragging);
+    else networksListEl.insertBefore(dragging, after);
+  });
+
+  networksListEl.addEventListener('drop', async (e) => {
+    if (!networksListEl.querySelector('.field-row.dragging')) return;
+    e.preventDefault();
+    const orderedIds = [...networksListEl.querySelectorAll('.field-row')].map((row) => Number(row.getAttribute('data-network-id')));
+    try {
+      await saveNetworkOrder(orderedIds);
+    } catch (error) {
+      showMsg('networksMsg', error.message, 'error');
+      await renderNetworksSection(); // revert to the server's actual order
+    }
+  });
+
   function formatCustomFieldValue(field, customFields, registrationId) {
     const value = customFields ? customFields[field.id] : undefined;
     if (field.type === 'checkbox') return value ? '<span class="yes">כן</span>' : '<span class="no">לא</span>';
@@ -1216,6 +1494,10 @@
     return r.selected_product_sku
       ? `${escapeHtml(r.selected_product_name)} <span class="file-info">(${escapeHtml(r.selected_product_sku)})</span>`
       : escapeHtml(r.selected_product_name);
+  }
+
+  function formatSelectedNetwork(r) {
+    return r.selected_network_name ? escapeHtml(r.selected_network_name) : '<span class="no">-</span>';
   }
 
   // Neutralizes a value that would otherwise make Excel/LibreOffice
@@ -1261,6 +1543,10 @@
     return sanitizeCsvCell(text);
   }
 
+  function plainSelectedNetwork(r) {
+    return r.selected_network_name ? sanitizeCsvCell(r.selected_network_name) : '';
+  }
+
   function csvEscape(value) {
     const str = String(value ?? '');
     return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
@@ -1271,12 +1557,13 @@
   // opens that directly (correctly showing Hebrew, not mojibake)
   // without needing a spreadsheet-writing library/dependency.
   async function exportRegistrationsToExcel() {
-    let registrations, fields, campaign;
+    let registrations, fields, campaign, networks;
     try {
-      [registrations, fields, campaign] = await Promise.all([
+      [registrations, fields, campaign, networks] = await Promise.all([
         api(`/api/campaigns/${id}/registrations`),
         api(`/api/campaigns/${id}/fields`),
         api(`/api/campaigns/${id}`),
+        api(`/api/campaigns/${id}/networks`),
       ]);
     } catch (error) {
       alert('שגיאה בטעינת הנתונים לייצוא: ' + error.message);
@@ -1289,14 +1576,17 @@
 
     const showGiftColumn = campaign.gift_mode === 'simple_choice' || campaign.gift_mode === 'product_and_gift' || campaign.gift_mode === 'product_then_gift';
     const showProductColumn = campaign.gift_mode === 'product_and_gift' || campaign.gift_mode === 'product_then_gift';
+    const showNetworkColumn = networks.length > 0;
     const headers = [
       ...fields.map((f) => sanitizeCsvCell(f.label)),
+      ...(showNetworkColumn ? ['רשת'] : []),
       ...(showProductColumn ? ['מוצר שנרכש'] : []),
       ...(showGiftColumn ? ['מתנה שנבחרה'] : []),
       'תאריך הרשמה',
     ];
     const rows = registrations.map((r) => [
       ...fields.map((f) => plainCustomFieldValue(f, r.custom_fields, r.id, location.origin)),
+      ...(showNetworkColumn ? [plainSelectedNetwork(r)] : []),
       ...(showProductColumn ? [plainSelectedProduct(r)] : []),
       ...(showGiftColumn ? [plainSelectedGift(r)] : []),
       new Date(r.created_at).toLocaleDateString('he-IL'),
@@ -1504,11 +1794,13 @@
       order: registrantsState.order,
     });
     if (registrantsState.q) params.set('q', registrantsState.q);
+    let networks;
     try {
-      [page, fields, campaign] = await Promise.all([
+      [page, fields, campaign, networks] = await Promise.all([
         api(`/api/campaigns/${id}/registrations?${params.toString()}`),
         api(`/api/campaigns/${id}/fields`),
         api(`/api/campaigns/${id}`),
+        api(`/api/campaigns/${id}/networks`),
       ]);
     } catch (error) {
       rowsEl.innerHTML = `<tr><td colspan="1" class="empty">${escapeHtml(error.message)}</td></tr>`;
@@ -1528,9 +1820,11 @@
     // gift/product columns only make sense for a gift-choice campaign.
     const showGiftColumn = campaign.gift_mode === 'simple_choice' || campaign.gift_mode === 'product_and_gift' || campaign.gift_mode === 'product_then_gift';
     const showProductColumn = campaign.gift_mode === 'product_and_gift' || campaign.gift_mode === 'product_then_gift';
-    const colCount = 1 + fields.length + (showGiftColumn ? 1 : 0) + (showProductColumn ? 1 : 0);
+    const showNetworkColumn = networks.length > 0;
+    const colCount = 1 + fields.length + (showGiftColumn ? 1 : 0) + (showProductColumn ? 1 : 0) + (showNetworkColumn ? 1 : 0);
     headerEl.innerHTML = `
       ${fields.map((f) => `<th data-sort="field:${f.id}">${escapeHtml(f.label)}</th>`).join('')}
+      ${showNetworkColumn ? '<th data-sort="selected_network_name">רשת</th>' : ''}
       ${showProductColumn ? '<th data-sort="selected_product_name">מוצר שנרכש</th>' : ''}
       ${showGiftColumn ? '<th data-sort="selected_gift_name">מתנה שנבחרה</th>' : ''}
       <th data-sort="created_at">תאריך הרשמה</th>
@@ -1547,6 +1841,7 @@
     rowsEl.innerHTML = page.rows.map((r) => `
       <tr>
         ${fields.map((f) => `<td>${formatCustomFieldValue(f, r.custom_fields, r.id)}</td>`).join('')}
+        ${showNetworkColumn ? `<td>${formatSelectedNetwork(r)}</td>` : ''}
         ${showProductColumn ? `<td>${formatSelectedProduct(r)}</td>` : ''}
         ${showGiftColumn ? `<td>${formatSelectedGift(r)}</td>` : ''}
         <td>${new Date(r.created_at).toLocaleDateString('he-IL')}</td>
@@ -2009,6 +2304,8 @@
     document.getElementById('footerNote').value = campaign.footer_note || '';
     document.getElementById('productsSectionTitle').value = campaign.products_section_title || '';
     document.getElementById('giftsSectionTitle').value = campaign.gifts_section_title || '';
+    document.getElementById('networksSectionTitle').value = campaign.networks_section_title || '';
+    document.getElementById('networksEnabled').checked = campaign.networks_enabled !== false;
     renderBanner(campaign);
     await renderTemplates(campaign.template);
     document.getElementById('giftMode').value = campaign.gift_mode || 'none';
@@ -2037,6 +2334,7 @@
       // so the browser blocks submission before this even runs.
       products_section_title: document.getElementById('productsSectionTitle').value.trim(),
       gifts_section_title: document.getElementById('giftsSectionTitle').value.trim(),
+      networks_section_title: document.getElementById('networksSectionTitle').value.trim(),
     };
     try {
       await api(`/api/campaigns/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
@@ -2050,9 +2348,206 @@
 
   initDescriptionEditor();
 
+  // Tabs — settings/dashboard/registrations/activity, each already-
+  // loaded panel just toggled via [hidden] rather than re-fetched on
+  // every switch (all four load once, up front, in the init Promise.all
+  // below). The active tab lives in the URL hash so a reload or a
+  // shared link (e.g. straight to #registrations) lands on the same
+  // one instead of always resetting to "הגדרות".
+  const TAB_NAMES = ['settings', 'dashboard', 'registrations', 'activity'];
+  function setActiveTab(tab) {
+    if (!TAB_NAMES.includes(tab)) tab = 'settings';
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      const isActive = btn.getAttribute('data-tab') === tab;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-selected', String(isActive));
+    });
+    TAB_NAMES.forEach((name) => {
+      document.getElementById(`tabPanel-${name}`).hidden = name !== tab;
+    });
+  }
+  document.querySelectorAll('.tab-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const tab = btn.getAttribute('data-tab');
+      location.hash = tab === 'settings' ? '' : tab;
+      setActiveTab(tab);
+    });
+  });
+  window.addEventListener('hashchange', () => setActiveTab(location.hash.slice(1)));
+  setActiveTab(location.hash.slice(1));
+
+  // Dashboard tab — KPI cards + plain CSS/HTML charts, ported verbatim
+  // from the now-retired standalone dashboard.html (same zero-
+  // dependency approach as the rest of this app: no charting library).
+  // Reuses this page's own id/api/escapeHtml/FIELD_TYPE_LABELS rather
+  // than redefining them.
+
+  function renderKpi(value, label) {
+    return `<div class="kpi-card"><div class="kpi-value">${escapeHtml(value)}</div><div class="kpi-label">${escapeHtml(label)}</div></div>`;
+  }
+
+  // items: [{ label, value, color? }]
+  function renderBarList(container, items) {
+    if (items.length === 0) {
+      container.innerHTML = '<p class="empty">אין נתונים עדיין.</p>';
+      return;
+    }
+    const max = Math.max(1, ...items.map((it) => it.value));
+    container.innerHTML = items.map((it) => `
+      <div class="chart-bar-row">
+        <div class="chart-bar-label" title="${escapeHtml(it.label)}">${escapeHtml(it.label)}</div>
+        <div class="chart-bar-track">
+          <div class="chart-bar-fill" style="width:${Math.round((it.value / max) * 100)}%; ${it.color ? `background:${it.color};` : ''}"></div>
+        </div>
+        <div class="chart-bar-value">${it.value}</div>
+      </div>
+    `).join('');
+  }
+
+  // points: [{ label, value }] — rendered as a horizontally-scrollable
+  // row of vertical bars (see .time-chart-wrap's overflow-x in the CSS).
+  function renderTimeChart(container, points) {
+    if (points.length === 0) {
+      container.innerHTML = '<p class="empty">אין נרשמים עדיין.</p>';
+      return;
+    }
+    const max = Math.max(1, ...points.map((p) => p.value));
+    container.innerHTML = `
+      <div class="time-chart">
+        ${points.map((p) => `
+          <div class="time-chart-col" title="${escapeHtml(p.label)}: ${p.value}">
+            <div class="time-chart-value">${p.value}</div>
+            <div class="time-chart-bar" style="height:${Math.max(2, Math.round((p.value / max) * 100))}%"></div>
+            <div class="time-chart-label">${escapeHtml(p.label)}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function formatDay(date) {
+    return date.toLocaleDateString('he-IL', { day: '2-digit', month: '2-digit' });
+  }
+
+  async function loadDashboardTab() {
+    // Unpaginated — same endpoint the registrants tab uses, just called
+    // with no page/search params, which (see listRegistrations)
+    // returns every registration at once rather than one page of them;
+    // the aggregate stats below need the whole set.
+    const [campaign, fields, registrations] = await Promise.all([
+      api(`/api/campaigns/${id}`),
+      api(`/api/campaigns/${id}/fields`),
+      api(`/api/campaigns/${id}/registrations`),
+    ]);
+
+    const views = campaign.views_count ?? 0;
+    const starts = campaign.form_starts_count ?? 0;
+    const regs = registrations.length;
+
+    // "Uploaded a file" = has a non-empty value on at least one
+    // file-type field. "Confirmed marketing consent" = the fixed
+    // checkbox every campaign gets automatically (see
+    // ensureMarketingConsentField in lib/handlers.js) — defensively
+    // handled as absent (older data / edge cases) rather than assumed.
+    const fileFieldIds = fields.filter((f) => f.type === 'file').map((f) => f.id);
+    const consentField = fields.find((f) => f.fixed_key === 'marketing_consent');
+    const uploaders = fileFieldIds.length
+      ? registrations.filter((r) => fileFieldIds.some((fid) => r.custom_fields && r.custom_fields[fid])).length
+      : 0;
+    const consented = consentField
+      ? registrations.filter((r) => r.custom_fields && r.custom_fields[consentField.id] === true).length
+      : 0;
+
+    const kpiGrid = document.getElementById('kpiGrid');
+    const kpis = [
+      renderKpi(views, 'צפיות בדף'),
+      renderKpi(starts, 'התחילו למלא'),
+      renderKpi(regs, 'נרשמו בפועל'),
+      renderKpi(views > 0 ? `${Math.round((regs / views) * 100)}%` : '-', 'יחס המרה מצפייה'),
+    ];
+    if (fileFieldIds.length) kpis.push(renderKpi(uploaders, 'העלו קובץ'));
+    if (consentField) kpis.push(renderKpi(regs > 0 ? `${Math.round((consented / regs) * 100)}%` : '-', 'אישרו דיוור'));
+    kpiGrid.innerHTML = kpis.join('');
+
+    renderBarList(document.getElementById('funnelChart'), [
+      { label: 'צפיות בדף', value: views, color: '#7c98b6' },
+      { label: 'התחילו למלא', value: starts, color: '#0091ae' },
+      { label: 'נרשמו בפועל', value: regs, color: '#ff7a59' },
+    ]);
+
+    // Group completed registrations by calendar day.
+    const dayBuckets = new Map();
+    registrations.forEach((r) => {
+      const d = new Date(r.created_at);
+      const key = d.toISOString().slice(0, 10);
+      dayBuckets.set(key, { date: d, count: (dayBuckets.get(key)?.count || 0) + 1 });
+    });
+    const dayPoints = Array.from(dayBuckets.values())
+      .sort((a, b) => a.date - b.date)
+      .map((b) => ({ label: formatDay(b.date), value: b.count }));
+    renderTimeChart(document.getElementById('timeChart'), dayPoints);
+
+    // Gift/product selection breakdown — only meaningful for a
+    // gift-choice campaign (see gift_mode), and only shown once there's
+    // at least one registration that actually picked something.
+    const giftCounts = new Map();
+    const productCounts = new Map();
+    registrations.forEach((r) => {
+      if (r.selected_gift_name) giftCounts.set(r.selected_gift_name, (giftCounts.get(r.selected_gift_name) || 0) + 1);
+      if (r.selected_product_name) productCounts.set(r.selected_product_name, (productCounts.get(r.selected_product_name) || 0) + 1);
+    });
+    const giftItems = Array.from(giftCounts.entries()).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+    const productItems = Array.from(productCounts.entries()).map(([label, value]) => ({ label, value })).sort((a, b) => b.value - a.value);
+    if (giftItems.length || productItems.length) {
+      document.getElementById('selectionBreakdownCard').style.display = '';
+      if (giftItems.length) {
+        document.getElementById('giftBreakdown').style.display = '';
+        renderBarList(document.getElementById('giftChart'), giftItems);
+      }
+      if (productItems.length) {
+        document.getElementById('productBreakdown').style.display = '';
+        renderBarList(document.getElementById('productChart'), productItems);
+      }
+    }
+
+    // Per-field breakdown for 'select' and 'checkbox' custom fields
+    // (free-text/date/email/phone/file values aren't meaningfully
+    // "breakdownable" into a bar chart). A select field's full defined
+    // value list is shown even where a value got zero picks; a
+    // checkbox is always just כן/לא.
+    const breakdownFields = fields.filter((f) => (f.type === 'select' || f.type === 'checkbox') && !f.fixed_key);
+    if (breakdownFields.length) {
+      document.getElementById('fieldsBreakdownCard').style.display = '';
+      const wrap = document.getElementById('fieldsCharts');
+      wrap.innerHTML = breakdownFields.map((f) => `
+        <div class="sub-chart">
+          <p class="sub-chart-title">${escapeHtml(f.label)} <span class="empty">(${FIELD_TYPE_LABELS[f.type]})</span></p>
+          <div id="fieldChart-${f.id}"></div>
+        </div>
+      `).join('');
+      breakdownFields.forEach((f) => {
+        const counts = new Map();
+        if (f.type === 'checkbox') {
+          counts.set('כן', 0);
+          counts.set('לא', 0);
+        } else {
+          ((f.options && f.options.values) || []).forEach((v) => counts.set(v, 0));
+        }
+        registrations.forEach((r) => {
+          const raw = r.custom_fields ? r.custom_fields[f.id] : undefined;
+          const key = f.type === 'checkbox' ? (raw ? 'כן' : 'לא') : raw;
+          if (key === undefined || key === null || key === '') return;
+          counts.set(key, (counts.get(key) || 0) + 1);
+        });
+        const items = Array.from(counts.entries()).map(([label, value]) => ({ label, value }));
+        renderBarList(document.getElementById(`fieldChart-${f.id}`), items);
+      });
+    }
+  }
+
   initAuth().then((ok) => {
     if (!ok) return;
-    Promise.all([reload(), loadRegistrations(), renderFieldsSection(), loadActivityLog()]).catch((error) => {
+    Promise.all([reload(), loadRegistrations(), renderFieldsSection(), renderNetworksSection(), loadActivityLog(), loadDashboardTab()]).catch((error) => {
       document.body.innerHTML = `<main><p>שגיאה בטעינת הקמפיין: ${escapeHtml(error.message)}</p></main>`;
     });
   });

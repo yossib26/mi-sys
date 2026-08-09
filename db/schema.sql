@@ -440,3 +440,75 @@ ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS gifts_section_title TEXT NOT NULL
 ALTER TABLE campaign_gifts ADD COLUMN IF NOT EXISTS stock INTEGER;
 ALTER TABLE campaign_gifts DROP CONSTRAINT IF EXISTS campaign_gifts_stock_check;
 ALTER TABLE campaign_gifts ADD CONSTRAINT campaign_gifts_stock_check CHECK (stock IS NULL OR stock >= 0);
+
+-- "Networks" (e.g. retail chains) are a *global* catalog — managed on
+-- their own dedicated admin page (networks.html), same shape as
+-- brands — not something defined per campaign. A campaign instead
+-- picks which of the global networks are relevant to it (checkboxes
+-- in edit.html), and a registrant on the public page then picks one
+-- of *those*. campaign_networks is a plain join table, same pattern
+-- as user_brands.
+CREATE TABLE IF NOT EXISTS networks (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- One-time migration guard: campaign_networks briefly existed (within
+-- this same development cycle, never released) as a *per-campaign
+-- named list* instead of this join table — if that older shape is
+-- still present, drop it (CASCADE takes the now-stale FK on
+-- registrations.selected_network_id with it; recreated correctly
+-- below). Guarded so this never fires again once the join-table shape
+-- is in place, which would otherwise wipe every campaign's real
+-- network selections on a later migrate.js run.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'campaign_networks' AND column_name = 'name'
+  ) THEN
+    DROP TABLE campaign_networks CASCADE;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS campaign_networks (
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  network_id INTEGER NOT NULL REFERENCES networks(id) ON DELETE CASCADE,
+  PRIMARY KEY (campaign_id, network_id)
+);
+
+-- Which network a registrant picked — same snapshot rationale as the
+-- gift/product columns above (name copied at registration time, so
+-- renaming/deleting a network later never rewrites what this
+-- registrant actually saw and chose). References the global networks
+-- table now, not the old per-campaign campaign_networks.id.
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS selected_network_id INTEGER;
+ALTER TABLE registrations DROP CONSTRAINT IF EXISTS registrations_selected_network_id_fkey;
+ALTER TABLE registrations ADD CONSTRAINT registrations_selected_network_id_fkey
+  FOREIGN KEY (selected_network_id) REFERENCES networks(id) ON DELETE SET NULL;
+ALTER TABLE registrations ADD COLUMN IF NOT EXISTS selected_network_name TEXT;
+
+-- Network logo — same BYTEA+mime shape as a brand logo (brands.logo),
+-- shown next to its name on networks.html and, optionally, wherever a
+-- network is presented on the public page.
+ALTER TABLE networks ADD COLUMN IF NOT EXISTS logo BYTEA;
+ALTER TABLE networks ADD COLUMN IF NOT EXISTS logo_mime TEXT;
+
+-- Per-campaign display order for its selected networks (edit.html's
+-- drag/up/down reordering, mirrored in the public page's icon grid) —
+-- set by setCampaignNetworks from the order network_ids arrives in,
+-- not alphabetical like the global catalog on networks.html.
+ALTER TABLE campaign_networks ADD COLUMN IF NOT EXISTS position INTEGER NOT NULL DEFAULT 0;
+
+-- Editable heading for the "בחר רשת" section on the public page, same
+-- pattern as products_section_title/gifts_section_title above.
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS networks_section_title TEXT NOT NULL DEFAULT 'בחר רשת';
+
+-- Admin-facing on/off switch (edit.html) for the networks section,
+-- independent of whether any networks are actually selected — lets an
+-- admin temporarily hide the section on the public page without
+-- losing the campaign's selection/order. Defaults to true so existing
+-- campaigns with networks already selected keep showing them exactly
+-- as before this column existed.
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS networks_enabled BOOLEAN NOT NULL DEFAULT true;
