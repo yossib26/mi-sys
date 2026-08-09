@@ -224,6 +224,23 @@ WHERE NOT EXISTS (
   SELECT 1 FROM campaign_fields cf WHERE cf.campaign_id = c.id AND cf.fixed_key = 'marketing_consent'
 );
 
+-- Second fixed field: a required "I've read and agree to the
+-- promotion's terms" checkbox, shown above marketing consent on the
+-- public page. Same fixed_key mechanism, same backfill pattern (new
+-- campaigns get it at creation time — see createCampaign) — position 0
+-- sorts it before marketing consent's position 1 among fixed fields
+-- (both still always sort after every regular dynamic field; see the
+-- "fixed_key IS NOT NULL" ordering above). Re-pointing marketing
+-- consent to position 1 is safe to always re-run — it's structural
+-- ordering, not a per-campaign admin preference being overwritten.
+INSERT INTO campaign_fields (campaign_id, type, label, required, options, position, fixed_key)
+SELECT c.id, 'checkbox', 'ראיתי ואני מסכים לתקנון המבצע', true, NULL, 0, 'terms_agreement'
+FROM campaigns c
+WHERE NOT EXISTS (
+  SELECT 1 FROM campaign_fields cf WHERE cf.campaign_id = c.id AND cf.fixed_key = 'terms_agreement'
+);
+UPDATE campaign_fields SET position = 1 WHERE fixed_key = 'marketing_consent';
+
 -- Optional ActiveTrail (email marketing) sync, configured entirely per
 -- campaign (not a shared server-wide credential): activetrail_token is
 -- that campaign's own ActiveTrail API token, activetrail_group_id is

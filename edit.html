@@ -1563,11 +1563,11 @@
       <div class="field-row field-row-fixed" data-field-id="${field.id}" data-fixed="1">
         <div class="field-row-main">
           <input class="field-label-input" placeholder="טקסט ליד תיבת הסימון" value="${escapeHtml(field.label)}" />
-          <span class="field-fixed-badge">צ'קבוקס · קבוע · תמיד אחרון</span>
+          <span class="field-fixed-badge">צ'קבוקס · קבוע${field.required ? ' · חובה' : ''}</span>
         </div>
         <p class="field-hint">
-          שדה קבוע שקיים בכל קמפיין ומוצג תמיד אחרון בטופס הציבורי. אפשר לערוך רק את הטקסט שלידו —
-          אי אפשר למחוק אותו, להזיז אותו או להפוך אותו לשדה חובה.
+          שדה קבוע שקיים בכל קמפיין ומוצג בסוף הטופס הציבורי. אפשר לערוך רק את הטקסט שלידו —
+          אי אפשר למחוק אותו, להזיז אותו או לשנות אם הוא שדה חובה.
         </p>
       </div>`;
   }
