@@ -428,3 +428,15 @@ END $$;
 -- same pattern as footer_note above.
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS products_section_title TEXT NOT NULL DEFAULT 'איזה מוצר רכשת?';
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS gifts_section_title TEXT NOT NULL DEFAULT 'בחר מתנה';
+
+-- Optional stock/inventory tracking per gift — NULL (the default,
+-- every existing gift) means unlimited/untracked, unchanged behavior.
+-- A non-null value is the remaining quantity: claimed atomically (one
+-- unit per registration, via an UPDATE ... WHERE stock > 0) so
+-- concurrent registrants can't oversell the last unit — see
+-- claimGiftStock in lib/handlers.js — and shown/enforced on the
+-- public page (renderGiftCard in lib/campaign-page.js) so a
+-- zero-stock gift can't be picked at all.
+ALTER TABLE campaign_gifts ADD COLUMN IF NOT EXISTS stock INTEGER;
+ALTER TABLE campaign_gifts DROP CONSTRAINT IF EXISTS campaign_gifts_stock_check;
+ALTER TABLE campaign_gifts ADD CONSTRAINT campaign_gifts_stock_check CHECK (stock IS NULL OR stock >= 0);

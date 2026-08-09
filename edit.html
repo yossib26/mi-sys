@@ -206,6 +206,7 @@
   .field-row-fixed { background: var(--bg); }
   .field-row-fixed .field-label-input { flex: 1; min-width: 220px; }
   .gift-sku-input { max-width: 130px; flex: 0 0 auto !important; }
+  .gift-stock-input { max-width: 90px; flex: 0 0 auto !important; }
   /* Image preview + upload/remove icons, inline in the gift/product row
      itself — same one-line-per-row idea as .field-row-main above. */
   .gift-image-inline { flex: none; display: flex; align-items: center; gap: 4px; }
@@ -695,6 +696,7 @@
         <div class="field-row-main">
           <input class="gift-sku-input" placeholder="מק״ט" value="${escapeHtml(gift.sku || '')}" />
           <input class="field-label-input gift-name-input" placeholder="שם המתנה" value="${escapeHtml(gift.name)}" />
+          <input type="number" class="gift-stock-input" placeholder="ללא הגבלה" min="0" step="1" title="מלאי (ריק = ללא הגבלה)" value="${gift.stock ?? ''}" />
           <div class="gift-image-inline">
             ${gift.has_image ? `<img class="gift-thumb" src="/api/campaigns/${id}/gifts/${gift.id}/image" alt="" />` : ''}
             <label class="icon-btn" title="${gift.has_image ? 'החלף תמונה' : 'העלה תמונה'}">
@@ -717,6 +719,7 @@
     const giftId = row.getAttribute('data-gift-id');
     const skuInput = row.querySelector('.gift-sku-input');
     const nameInput = row.querySelector('.gift-name-input');
+    const stockInput = row.querySelector('.gift-stock-input');
 
     async function saveGift() {
       const name = nameInput.value.trim();
@@ -727,7 +730,7 @@
       try {
         await api(`/api/campaigns/${id}/gifts/${giftId}`, {
           method: 'PUT',
-          body: JSON.stringify({ sku: skuInput.value.trim(), name }),
+          body: JSON.stringify({ sku: skuInput.value.trim(), name, stock: stockInput.value === '' ? null : Number(stockInput.value) }),
         });
         showMsg('giftModeMsg', 'המתנה עודכנה', 'success');
       } catch (error) {
@@ -735,6 +738,7 @@
       }
     }
     skuInput.addEventListener('change', saveGift);
+    stockInput.addEventListener('change', saveGift);
     nameInput.addEventListener('change', saveGift);
 
     // Scoped to .field-row-actions specifically (not every .icon-btn in
@@ -898,6 +902,7 @@
         <div class="field-row-main">
           <input class="gift-sku-input" placeholder="מק״ט" value="${escapeHtml(gift.sku || '')}" />
           <input class="field-label-input gift-name-input" placeholder="שם המתנה" value="${escapeHtml(gift.name)}" />
+          <input type="number" class="gift-stock-input" placeholder="ללא הגבלה" min="0" step="1" title="מלאי (ריק = ללא הגבלה)" value="${gift.stock ?? ''}" />
           <div class="gift-image-inline">
             ${gift.has_image ? `<img class="gift-thumb" src="/api/campaigns/${id}/gifts/${gift.id}/image" alt="" />` : ''}
             <label class="icon-btn" title="${gift.has_image ? 'החלף תמונה' : 'העלה תמונה'}">
@@ -920,6 +925,7 @@
     const giftId = row.getAttribute('data-gift-id');
     const skuInput = row.querySelector('.gift-sku-input');
     const nameInput = row.querySelector('.gift-name-input');
+    const stockInput = row.querySelector('.gift-stock-input');
 
     async function saveGift() {
       const name = nameInput.value.trim();
@@ -930,7 +936,7 @@
       try {
         await api(`/api/campaigns/${id}/gifts/${giftId}`, {
           method: 'PUT',
-          body: JSON.stringify({ sku: skuInput.value.trim(), name }),
+          body: JSON.stringify({ sku: skuInput.value.trim(), name, stock: stockInput.value === '' ? null : Number(stockInput.value) }),
         });
         showMsg('giftModeMsg', 'המתנה עודכנה', 'success');
       } catch (error) {
@@ -939,6 +945,7 @@
     }
     skuInput.addEventListener('change', saveGift);
     nameInput.addEventListener('change', saveGift);
+    stockInput.addEventListener('change', saveGift);
 
     // Scoped to .field-row-actions — the row also carries an
     // upload/remove-image icon button pair now that it's all one line.
