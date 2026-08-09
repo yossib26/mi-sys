@@ -249,8 +249,6 @@
             <th class="select-col" id="selectAllHeaderCell"><input type="checkbox" id="selectAllCampaigns" title="בחר הכל" /></th>
             <th data-sort="brand_name">מותג</th>
             <th data-sort="name">שם</th>
-            <th data-sort="start_date">התחלה</th>
-            <th data-sort="end_date">סיום</th>
             <th data-sort="status">סטטוס</th>
             <th data-sort="views_count">צפיות</th>
             <th data-sort="form_starts_count">התחילו למלא</th>
@@ -349,7 +347,7 @@
   }
 
   function colCount() {
-    return currentUser && currentUser.role === 'admin' ? 11 : 10;
+    return currentUser && currentUser.role === 'admin' ? 9 : 8;
   }
 
   // Bulk-select state for the admin-only "archive selected" action —
@@ -460,10 +458,6 @@
     filterSelect.value = prevFilter;
   }
 
-  function formatDate(value) {
-    return value || '-';
-  }
-
   const PAGE_SIZE_OPTIONS = [10, 19, 25, 50, 100];
   const sortState = { sort: 'created_at', order: 'desc' };
   let currentPage = 1;
@@ -562,8 +556,6 @@
         ${isAdmin ? `<td class="select-col">${c.status !== 'archived' ? `<input type="checkbox" class="select-campaign-checkbox" data-select-campaign="${c.id}" />` : ''}</td>` : ''}
         <td>${escapeHtml(c.brand_name)}</td>
         <td>${avatarHtml(c.name)}${escapeHtml(c.name)}</td>
-        <td>${formatDate(c.start_date)}</td>
-        <td>${formatDate(c.end_date)}</td>
         <td>
           <select class="status-select" data-status-for="${c.id}">
             ${STATUSES.map((s) => `<option value="${s}" ${s === c.status ? 'selected' : ''} ${s === 'archived' && (!currentUser || currentUser.role !== 'admin') ? 'disabled' : ''}>${STATUS_LABELS[s]}</option>`).join('')}
