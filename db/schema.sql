@@ -48,6 +48,20 @@ CREATE TABLE IF NOT EXISTS campaigns (
 
 CREATE INDEX IF NOT EXISTS idx_campaigns_brand_id ON campaigns (brand_id);
 
+-- Deleting a brand must never take its campaigns — and through them,
+-- their registrations — down with it. Campaign "deletion" is archiving
+-- in place, never row removal (see deleteCampaign in lib/handlers.js),
+-- so the original ON DELETE CASCADE here was the single path in the
+-- app that could silently destroy real registration history. RESTRICT
+-- instead: a brand that still has campaigns attached (archived ones
+-- included) can't be deleted until they're reassigned to another
+-- brand. deleteBrand pre-checks the same thing and returns a readable
+-- error; this is the enforcement underneath it, covering any other
+-- path to a brand row and the race between that check and the delete.
+ALTER TABLE campaigns DROP CONSTRAINT IF EXISTS campaigns_brand_id_fkey;
+ALTER TABLE campaigns ADD CONSTRAINT campaigns_brand_id_fkey
+  FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE RESTRICT;
+
 -- 'archived' added: "deleting" a campaign from the admin UI archives
 -- it in place rather than removing the row (and its registrations),
 -- so the check constraint needs to allow that value too.

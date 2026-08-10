@@ -363,7 +363,10 @@
 
     const deleteId = e.target.getAttribute('data-delete-brand');
     if (deleteId) {
-      if (!confirm('למחוק את המותג? כל הקמפיינים שלו יימחקו גם הם.')) return;
+      // Only a brand with no campaigns at all can be deleted (the
+      // server rejects the rest — see deleteBrand in lib/handlers.js),
+      // so there's nothing here to warn about losing.
+      if (!confirm('למחוק את המותג?')) return;
       try {
         await api(`/api/brands/${deleteId}`, { method: 'DELETE' });
         await loadBrands();
