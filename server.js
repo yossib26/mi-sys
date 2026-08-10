@@ -29,6 +29,7 @@ const staticPages = {
   '/users.html': 'users.html',
   '/brands.html': 'brands.html',
   '/networks.html': 'networks.html',
+  '/sms-settings.html': 'sms-settings.html',
   '/dashboard.html': 'dashboard.html',
 };
 const htmlCache = Object.fromEntries(
@@ -84,6 +85,13 @@ const routes = [
   // 30s while there's been real activity — re-mints the session
   // cookie with a fresh 10-minute expiry (SESSION_TTL_MS).
   { method: 'POST', pattern: /^\/api\/auth\/refresh$/, auth: 'user', handler: (_req, _m, _q, user) => ({ status: 200, body: user, headers: { 'Set-Cookie': auth.buildSessionCookie(user) } }) },
+
+  // Server-wide SMS provider settings — admin-only, like user
+  // management. The password is write-only (never returned); the test
+  // endpoint sends a real message through whatever is configured.
+  { method: 'GET', pattern: /^\/api\/sms-settings$/, auth: 'admin', handler: () => handlers.getSmsSettings(pool) },
+  { method: 'PUT', pattern: /^\/api\/sms-settings$/, auth: 'admin', handler: async (req, _m, _q, user) => handlers.updateSmsSettings(pool, await readJsonBody(req), user) },
+  { method: 'POST', pattern: /^\/api\/sms-settings\/test$/, auth: 'admin', handler: async (req) => handlers.sendTestSms(pool, await readJsonBody(req)) },
 
   { method: 'GET', pattern: /^\/api\/users$/, auth: 'admin', handler: () => users.listUsers(pool) },
   { method: 'POST', pattern: /^\/api\/users$/, auth: 'admin', handler: async (req) => users.createUser(pool, await readJsonBody(req)) },

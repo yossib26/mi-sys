@@ -534,6 +534,26 @@ ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS otp_enabled BOOLEAN NOT NULL DEFA
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS otp_phone_field_id INTEGER
   REFERENCES campaign_fields(id) ON DELETE SET NULL;
 
+-- Server-wide settings edited from the admin UI rather than baked into
+-- the deployment — currently just the SMS provider's connection
+-- details (see sms-settings.html and getSmsConfig in lib/handlers.js).
+-- Key/value rather than a column per setting: these are a handful of
+-- free-text strings read in one place, and adding the next one
+-- shouldn't need a migration.
+--
+-- Values here take precedence over the matching UNICELL_* environment
+-- variables, which stay as the fallback, so an existing deployment
+-- configured that way keeps working until someone saves settings here.
+-- The password row is write-only as far as the API is concerned: it is
+-- never selected back out to a caller, only its presence (same rule as
+-- campaigns.activetrail_token).
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_by TEXT
+);
+
 -- One OTP challenge: a code sent to one phone number for one campaign.
 -- The code itself is never stored — only an HMAC of it (see hashOtpCode
 -- in lib/handlers.js), so a leaked database row can't be turned back
