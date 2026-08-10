@@ -170,7 +170,7 @@ const routes = [
   // Global "networks" catalog (e.g. retail chains) — managed on its
   // own admin page (networks.html), same shape/permissions as brands:
   // any logged-in user can list, only admins manage the catalog.
-  { method: 'GET', pattern: /^\/api\/networks$/, auth: 'user', handler: () => handlers.listNetworks(pool) },
+  { method: 'GET', pattern: /^\/api\/networks$/, auth: 'user', handler: (_req, _m, query) => handlers.listNetworks(pool, query) },
   { method: 'POST', pattern: /^\/api\/networks$/, auth: 'admin', handler: async (req) => handlers.createNetwork(pool, await readJsonBody(req)) },
   { method: 'PUT', pattern: /^\/api\/networks\/(\d+)$/, auth: 'admin', handler: async (req, [networkId]) => handlers.updateNetwork(pool, networkId, await readJsonBody(req)) },
   { method: 'DELETE', pattern: /^\/api\/networks\/(\d+)$/, auth: 'admin', handler: (_req, [networkId]) => handlers.deleteNetwork(pool, networkId) },

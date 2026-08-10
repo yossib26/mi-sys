@@ -509,6 +509,18 @@ ALTER TABLE registrations ADD COLUMN IF NOT EXISTS selected_network_name TEXT;
 ALTER TABLE networks ADD COLUMN IF NOT EXISTS logo BYTEA;
 ALTER TABLE networks ADD COLUMN IF NOT EXISTS logo_mime TEXT;
 
+-- Retiring a network without deleting it (which would cascade its
+-- campaign_networks rows away and lose every campaign's selection).
+-- An inactive network stays in the catalog on networks.html, but is
+-- hidden from the campaign editor's list and from the public page, and
+-- can't be picked by a registrant — see listNetworks /
+-- listCampaignNetworks / getCampaignBySlug in lib/handlers.js.
+-- Deliberately not filtered out of campaign_networks: a campaign that
+-- already had it selected keeps the row (setCampaignNetworks leaves
+-- inactive selections alone), so reactivating brings it straight back.
+-- Defaults to true so every existing network stays exactly as it was.
+ALTER TABLE networks ADD COLUMN IF NOT EXISTS active BOOLEAN NOT NULL DEFAULT true;
+
 -- Per-campaign display order for its selected networks (edit.html's
 -- drag/up/down reordering, mirrored in the public page's icon grid) —
 -- set by setCampaignNetworks from the order network_ids arrives in,

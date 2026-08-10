@@ -10,7 +10,7 @@ module.exports = async (req, res) => {
     // admin-only — same split as brands.
     if (req.method === 'GET') {
       auth.requireAuth(req);
-      return respond(res, await handlers.listNetworks(pool));
+      return respond(res, await handlers.listNetworks(pool, req.query));
     }
     if (req.method === 'POST') {
       auth.requireAdmin(req);
