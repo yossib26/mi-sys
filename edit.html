@@ -436,6 +436,12 @@
   </section>
 
   <section class="card">
+    <h2>אימות בקוד SMS</h2>
+    <p class="subtitle">כשהאפשרות פעילה, נרשם שמילא את הטופס יתבקש להזין קוד שנשלח אליו ב-SMS. ההרשמה נשמרת רק אחרי אימות מוצלח. פרטי החיבור לספק ה-SMS מוגדרים ברמת השרת, לא כאן.</p>
+    <div id="otpSection"><p class="file-info">טוען…</p></div>
+  </section>
+
+  <section class="card">
     <h2>הערה כללית בתחתית העמוד</h2>
     <p class="subtitle">מוצגת בתחתית הדף הציבורי של הקמפיין, ליד לוגו המותג (מנוהל בעמוד ניהול המותגים).</p>
     <div class="field">
@@ -2279,6 +2285,85 @@
     }
   }
 
+  // Same shape as renderActiveTrailSection above, with one deliberate
+  // difference: there are no credentials to enter here. The SMS
+  // account is server-wide (UNICELL_* environment variables, see
+  // lib/unicell.js), so all this campaign owns is whether the step is
+  // on and which of its own fields holds the phone number to text.
+  //
+  // Only 'phone' fields are offered — the server rejects anything else
+  // — so a campaign with no phone field can't switch this on at all,
+  // and says so instead of failing on save.
+  async function renderOtpSection(campaign) {
+    const wrap = document.getElementById('otpSection');
+    let fields = [];
+    try {
+      fields = await api(`/api/campaigns/${id}/fields`);
+    } catch (error) {
+      wrap.innerHTML = `<p class="file-info">${escapeHtml(error.message)}</p>`;
+      return;
+    }
+    const phoneFields = fields.filter((f) => f.type === 'phone');
+    // With exactly one phone field there's nothing to choose, so it's
+    // preselected — otherwise ticking the checkbox would fail the
+    // server's "which field?" check for no good reason.
+    const selectedFieldId = campaign.otp_phone_field_id
+      || (phoneFields.length === 1 ? phoneFields[0].id : '');
+
+    if (phoneFields.length === 0) {
+      wrap.innerHTML = `
+        <label class="field-required-toggle" style="margin-bottom: 8px; opacity: 0.55;">
+          <input type="checkbox" disabled />
+          דרוש אימות בקוד SMS לפני שמירת ההרשמה
+        </label>
+        <p class="file-info">כדי להפעיל אימות SMS יש להוסיף לטופס שדה מסוג "מספר טלפון" (בקטע שדות הטופס למעלה).</p>
+      `;
+      return;
+    }
+
+    wrap.innerHTML = `
+      <label class="field-required-toggle" style="margin-bottom: 16px;">
+        <input type="checkbox" id="otpEnabled" ${campaign.otp_enabled ? 'checked' : ''} />
+        דרוש אימות בקוד SMS לפני שמירת ההרשמה
+      </label>
+      <div id="otpFieldsWrap" style="display: ${campaign.otp_enabled ? 'block' : 'none'};">
+        <div class="grid">
+          <div class="field wide">
+            <label for="otpPhoneField">שדה הטלפון שאליו יישלח הקוד</label>
+            <select id="otpPhoneField">
+              <option value="">בחר שדה…</option>
+              ${phoneFields.map((f) => `<option value="${f.id}" ${f.id === selectedFieldId ? 'selected' : ''}>${escapeHtml(f.label)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+      </div>
+      <p class="msg" id="otpMsg"></p>
+    `;
+
+    async function save(overrides) {
+      const phoneFieldId = document.getElementById('otpPhoneField').value || null;
+      const payload = { otp_phone_field_id: phoneFieldId ? Number(phoneFieldId) : null };
+      Object.assign(payload, overrides);
+      try {
+        const updated = await api(`/api/campaigns/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        showMsg('otpMsg', 'ההגדרות נשמרו', 'success');
+        await renderOtpSection(updated);
+      } catch (error) {
+        showMsg('otpMsg', error.message, 'error');
+        // The server refused, so the checkbox on screen no longer
+        // reflects what's stored — re-render from the campaign we know
+        // rather than leaving it showing a state that wasn't saved.
+        await renderOtpSection(campaign);
+      }
+    }
+
+    document.getElementById('otpEnabled').addEventListener('change', (e) => {
+      document.getElementById('otpFieldsWrap').style.display = e.target.checked ? 'block' : 'none';
+      save({ otp_enabled: e.target.checked });
+    });
+    document.getElementById('otpPhoneField').addEventListener('change', () => save());
+  }
+
   // Set on every reload() to whatever the campaign's brand currently
   // is — used only to build the public-URL preview below the slug
   // field (the brand half of /c/:brandSlug/:campaignSlug isn't
@@ -2318,6 +2403,7 @@
     document.getElementById('giftMode').value = campaign.gift_mode || 'none';
     await Promise.all([renderGiftsSection(), renderProductsSection()]);
     await renderActiveTrailSection(campaign);
+    await renderOtpSection(campaign);
     return campaign;
   }
 

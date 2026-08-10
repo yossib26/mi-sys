@@ -519,6 +519,53 @@ ALTER TABLE campaign_networks ADD COLUMN IF NOT EXISTS position INTEGER NOT NULL
 -- pattern as products_section_title/gifts_section_title above.
 ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS networks_section_title TEXT NOT NULL DEFAULT 'בחר רשת';
 
+-- Optional SMS one-time-password step on the public registration form:
+-- with otp_enabled on, a visitor who has filled the form has to prove
+-- they own the phone number they typed before anything is written to
+-- registrations. otp_phone_field_id says which of the campaign's own
+-- dynamic fields holds that number — same shape as
+-- activetrail_email_field_id above, including ON DELETE SET NULL, so
+-- deleting the designated field just turns the step off rather than
+-- erroring. Unlike the ActiveTrail integration, the provider
+-- credentials are NOT stored per campaign: the SMS account is a single
+-- server-wide one (UNICELL_* environment variables, see lib/unicell.js),
+-- so no secret of any kind lives on the campaign row here.
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS otp_enabled BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS otp_phone_field_id INTEGER
+  REFERENCES campaign_fields(id) ON DELETE SET NULL;
+
+-- One OTP challenge: a code sent to one phone number for one campaign.
+-- The code itself is never stored — only an HMAC of it (see hashOtpCode
+-- in lib/handlers.js), so a leaked database row can't be turned back
+-- into a working code.
+--
+-- The row doubles as the capability the registration is later admitted
+-- with: its id is 32 random bytes handed only to the browser that
+-- requested it, and createRegistration accepts a registration for an
+-- OTP campaign only against a row that is verified, unexpired and not
+-- yet consumed. consumed_at is what makes that single-use — one
+-- verified challenge can't be replayed into a second registration.
+--
+-- attempts caps guessing at a handful of tries per challenge (a
+-- 6-digit code is only a million values); created_at backs the
+-- per-phone send throttle. ON DELETE CASCADE: challenges are
+-- short-lived scratch state, with nothing worth keeping once the
+-- campaign is gone.
+CREATE TABLE IF NOT EXISTS otp_challenges (
+  id TEXT PRIMARY KEY,
+  campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+  phone TEXT NOT NULL,
+  code_hash TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  expires_at TIMESTAMPTZ NOT NULL,
+  verified_at TIMESTAMPTZ,
+  consumed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_otp_challenges_throttle
+  ON otp_challenges (campaign_id, phone, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_otp_challenges_expires_at ON otp_challenges (expires_at);
+
 -- Admin-facing on/off switch (edit.html) for the networks section,
 -- independent of whether any networks are actually selected — lets an
 -- admin temporarily hide the section on the public page without

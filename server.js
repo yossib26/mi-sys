@@ -121,6 +121,11 @@ const routes = [
   { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/registrations$/, handler: async (req, [id]) => handlers.createRegistration(pool, id, await readJsonBody(req)) },
   { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/form-start$/, handler: (_req, [id]) => handlers.recordCampaignFormStart(pool, id) },
 
+  // Public, same as the registration submission itself — the SMS
+  // verification step the public form runs just before submitting.
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/otp\/send$/, handler: async (req, [id]) => handlers.sendRegistrationOtp(pool, id, await readJsonBody(req)) },
+  { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/otp\/verify$/, handler: async (req, [id]) => handlers.verifyRegistrationOtp(pool, id, await readJsonBody(req)) },
+
   // Dynamic registration-form fields for a campaign.
   { method: 'GET', pattern: /^\/api\/campaigns\/(\d+)\/fields$/, auth: 'user', handler: async (_req, [id], _q, user) => handlers.listCampaignFields(pool, id, await users.getBrandScope(pool, user)) },
   { method: 'POST', pattern: /^\/api\/campaigns\/(\d+)\/fields$/, auth: 'user', handler: async (req, [id], _q, user) => handlers.createCampaignField(pool, id, await readJsonBody(req), await users.getBrandScope(pool, user), user) },
